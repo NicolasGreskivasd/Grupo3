@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Feedbacks</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Gerenciamento de Feedbacks</h1>
+    </div>
+    <div class="container">
+        <h2 id="formTitle">Adicionar Feedback</h2>
+        <input type="hidden" id="idFeedback">
+        <div class="form-group">
+            <label for="idUsuario">ID Usuário:</label>
+            <input type="number" id="idUsuario">
+        </div>
+        <div class="form-group">
+            <label for="comentario">Comentário:</label>
+            <textarea id="comentario"></textarea>
+        </div>
+        <button class="button" id="saveButton" onclick="salvarFeedback()">Adicionar</button>
+
+        <h2>Lista de Feedbacks</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID Feedback</th>
+                    <th>ID Usuário</th>
+                    <th>Comentário</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="feedbacksTable">
+                <!-- Feedbacks serão carregados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="js/service.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", carregarFeedbacks);
+
+        // Carregar feedbacks
+        async function carregarFeedbacks() {
+            const feedbacks = await getData('feedback');
+            const tabela = document.getElementById('feedbacksTable');
+            tabela.innerHTML = '';
+
+            feedbacks.forEach(feedback => {
+                const row = `
+                    <tr>
+                        <td>${feedback.idFeedback}</td>
+                        <td>${feedback.idUsuario}</td>
+                        <td>${feedback.comentario}</td>
+                        <td>
+                            <button onclick="editarFeedback(${feedback.idFeedback})">Editar</button>
+                            <button onclick="excluirFeedback(${feedback.idFeedback})">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+                tabela.innerHTML += row;
+            });
+        }
+
+        // Adicionar ou editar feedback
+        async function salvarFeedback() {
+            const idFeedback = document.getElementById('idFeedback').value;
+            const idUsuario = document.getElementById('idUsuario').value;
+            const comentario = document.getElementById('comentario').value;
+
+            const novoFeedback = { idUsuario, comentario };
+
+            if (idFeedback) {
+                await sendData(`feedback/${idFeedback}`, novoFeedback, 'PUT');
+            } else {
+                await sendData('feedback', novoFeedback);
+            }
+
+            limparFormulario();
+            carregarFeedbacks();
+        }
+
+        // Carregar feedback para edição
+        async function editarFeedback(idFeedback) {
+            const feedback = await getData(`feedback/${idFeedback}`);
+
+            document.getElementById('idFeedback').value = feedback.idFeedback;
+            document.getElementById('idUsuario').value = feedback.idUsuario;
+            document.getElementById('comentario').value = feedback.comentario;
+
+            document.getElementById('formTitle').textContent = 'Editar Feedback';
+            document.getElementById('saveButton').textContent = 'Salvar Alterações';
+        }
+
+        // Excluir feedback
+        async function excluirFeedback(idFeedback) {
+            if (confirm('Tem certeza que deseja excluir este feedback?')) {
+                await deleteData(`feedback/${idFeedback}`);
+                carregarFeedbacks();
+            }
+        }
+
+        // Limpar o formulário
+        function limparFormulario() {
+            document.getElementById('idFeedback').value = '';
+            document.getElementById('idUsuario').value = '';
+            document.getElementById('comentario').value = '';
+            document.getElementById('formTitle').textContent = 'Adicionar Feedback';
+            document.getElementById('saveButton').textContent = 'Adicionar';
+        }
+    </script>
+</body>
+</html>

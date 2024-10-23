@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <div class="form-group">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Senha:</label>
+            <input type="password" id="password">
+        </div>
+        <button class="button" onclick="login()">Entrar</button>
+        <p id="errorMessage" class="error"></p>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('http://localhost:8081/api/usuarios/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                alert("Login bem-sucedido");
+                // Redirecionar para a página principal, por exemplo
+                window.location.href = 'paginainicial.html'; 
+            } else {
+                document.getElementById('errorMessage').textContent = 'Credenciais inválidas';
+            }
+        }
+    </script>
+</body>
+</html>

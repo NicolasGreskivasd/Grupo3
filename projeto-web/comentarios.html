@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Comentários</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Gerenciamento de Comentários</h1>
+    </div>
+    <div class="container">
+        <h2 id="formTitle">Adicionar Comentário</h2>
+        <input type="hidden" id="idComentario">
+        <div class="form-group">
+            <label for="idUsuario">ID Usuário:</label>
+            <input type="number" id="idUsuario">
+        </div>
+        <div class="form-group">
+            <label for="idPostagem">ID Postagem:</label>
+            <input type="number" id="idPostagem">
+        </div>
+        <div class="form-group">
+            <label for="comentario">Comentário:</label>
+            <textarea id="comentario"></textarea>
+        </div>
+        <button class="button" id="saveButton" onclick="salvarComentario()">Adicionar</button>
+
+        <h2>Lista de Comentários</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Comentário</th>
+                    <th>ID Usuário</th>
+                    <th>ID Postagem</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="comentariosTable">
+                <!-- Comentários serão carregados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="js/service.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", carregarComentarios);
+
+        // Carregar comentários
+        async function carregarComentarios() {
+            const comentarios = await getData('comentarios');
+            const tabela = document.getElementById('comentariosTable');
+            tabela.innerHTML = '';
+
+            comentarios.forEach(comentario => {
+                const row = `
+                    <tr>
+                        <td>${comentario.idComentario}</td>
+                        <td>${comentario.comentario}</td>
+                        <td>${comentario.idUsuario}</td>
+                        <td>${comentario.idPostagem}</td>
+                        <td>
+                            <button onclick="editarComentario(${comentario.idComentario})">Editar</button>
+                            <button onclick="excluirComentario(${comentario.idComentario})">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+                tabela.innerHTML += row;
+            });
+        }
+
+        // Adicionar ou editar comentário
+        async function salvarComentario() {
+            const idComentario = document.getElementById('idComentario').value;
+            const idUsuario = document.getElementById('idUsuario').value;
+            const idPostagem = document.getElementById('idPostagem').value;
+            const comentario = document.getElementById('comentario').value;
+
+            const novoComentario = { idUsuario, idPostagem, comentario };
+
+            if (idComentario) {
+                await sendData(`comentarios/${idComentario}`, novoComentario, 'PUT');
+            } else {
+                await sendData('comentarios', novoComentario);
+            }
+
+            limparFormulario();
+            carregarComentarios();
+        }
+
+        // Carregar comentário para edição
+        async function editarComentario(idComentario) {
+            const comentario = await getData(`comentarios/${idComentario}`);
+
+            document.getElementById('idComentario').value = comentario.idComentario;
+            document.getElementById('idUsuario').value = comentario.idUsuario;
+            document.getElementById('idPostagem').value = comentario.idPostagem;
+            document.getElementById('comentario').value = comentario.comentario;
+
+            document.getElementById('formTitle').textContent = 'Editar Comentário';
+            document.getElementById('saveButton').textContent = 'Salvar Alterações';
+        }
+
+        // Excluir comentário
+        async function excluirComentario(idComentario) {
+            if (confirm('Tem certeza que deseja excluir este comentário?')) {
+                await deleteData(`comentarios/${idComentario}`);
+                carregarComentarios();
+            }
+        }
+
+        // Limpar o formulário
+        function limparFormulario() {
+            document.getElementById('idComentario').value = '';
+            document.getElementById('idUsuario').value = '';
+            document.getElementById('idPostagem').value = '';
+            document.getElementById('comentario').value = '';
+            document.getElementById('formTitle').textContent = 'Adicionar Comentário';
+            document.getElementById('saveButton').textContent = 'Adicionar';
+        }
+    </script>
+</body>
+</html>

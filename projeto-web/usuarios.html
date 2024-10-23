@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Usuários</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Gerenciamento de Usuários</h1>
+    </div>
+    <div class="container">
+        <h2 id="formTitle">Adicionar Usuário</h2>
+        <input type="hidden" id="idUsuario">
+        <div class="form-group">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome">
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email">
+        </div>
+        <div class="form-group">
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha">
+        </div>
+        <div class="form-group">
+            <label for="perfil">Perfil:</label>
+            <input type="text" id="perfil">
+        </div>
+        <button class="button" id="saveButton" onclick="salvarUsuario()">Adicionar</button>
+
+        <h2>Lista de Usuários</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Perfil</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="usuariosTable">
+                <!-- Usuários serão carregados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="js/service.js"></script>
+    <script>
+        // Chamar essa função ao carregar a página
+
+        document.addEventListener("DOMContentLoaded", carregarUsuarios);
+
+        // Carregar usuários
+        async function carregarUsuarios() {
+            const usuarios = await getData('usuarios');
+            const tabela = document.getElementById('usuariosTable');
+            tabela.innerHTML = '';
+
+            usuarios.forEach(usuario => {
+                const row = `
+                    <tr>
+                        <td>${usuario.idUsuario}</td>
+                        <td>${usuario.nome}</td>
+                        <td>${usuario.email}</td>
+                        <td>${usuario.perfil}</td>
+                        <td>
+                            <button class="admin-only" onclick="editarUsuario(${usuario.idUsuario})">Editar</button>
+                            <button class="admin-only" onclick="excluirUsuario(${usuario.idUsuario})">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+                tabela.innerHTML += row;
+            });
+        }
+
+        // Adicionar ou editar usuário
+        async function salvarUsuario() {
+            const idUsuario = document.getElementById('idUsuario').value;
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const perfil = document.getElementById('perfil').value;
+
+            const usuario = { nome, email, senha, perfil };
+
+            if (idUsuario) {
+                await sendData(`usuarios/${idUsuario}`, usuario, 'PUT');
+            } else {
+                await sendData('usuarios', usuario);
+            }
+
+            limparFormulario();
+            carregarUsuarios(); 
+        }
+
+        // Carregar usuário no formulário para editar
+        async function editarUsuario(idUsuario) {
+            const usuario = await getData(`usuarios/${idUsuario}`);
+
+            document.getElementById('idUsuario').value = usuario.idUsuario;
+            document.getElementById('nome').value = usuario.nome;
+            document.getElementById('email').value = usuario.email;
+            document.getElementById('senha').value = usuario.senha;
+            document.getElementById('perfil').value = usuario.perfil;
+
+            document.getElementById('formTitle').textContent = 'Editar Usuário';
+            document.getElementById('saveButton').textContent = 'Salvar Alterações';
+        }
+
+        // Excluir usuário
+        async function excluirUsuario(idUsuario) {
+            if (confirm('Tem certeza que deseja excluir este usuário?')) {
+                await deleteData(`usuarios/${idUsuario}`);
+                carregarUsuarios();
+            }
+        }
+
+        // Limpar o formulário
+        function limparFormulario() {
+            document.getElementById('idUsuario').value = '';
+            document.getElementById('nome').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('senha').value = '';
+            document.getElementById('perfil').value = '';
+            document.getElementById('formTitle').textContent = 'Adicionar Usuário';
+            document.getElementById('saveButton').textContent = 'Adicionar';
+        }
+
+    </script>
+</body>
+</html>
