@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs de Atividades</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <h1>Logs de Atividades</h1>
+    
+    <table id="logsTable" class="table">
+        <thead>
+            <tr>
+                <th>ID Log</th>
+                <th>ID Usuário</th>
+                <th>Ação</th>
+                <th>Data da Ação</th>
+                <th>IP Usuário</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Os logs serão preenchidos aqui via JavaScript -->
+        </tbody>
+    </table>
+
+    <script src="js/service.js"></script>
+    <script>
+        async function carregarLogs() {
+            const logs = await getData('logs');
+            const logsTable = document.getElementById('logsTable').getElementsByTagName('tbody')[0];
+            
+            if (logs && logs.length > 0) {
+                logs.forEach(log => {
+                    const row = logsTable.insertRow();
+                    row.innerHTML = `
+                        <td>${log.idLog}</td>
+                        <td>${log.idUsuario}</td>
+                        <td>${log.acao}</td>
+                        <td>${log.dataAcao}</td>
+                        <td>${log.ipUsuario}</td>
+                    `;
+                });
+            } else {
+                logsTable.innerHTML = '<tr><td colspan="5">Nenhum log encontrado</td></tr>';
+            }
+        }
+
+        window.onload = carregarLogs;
+    </script>
+</body>
+</html>

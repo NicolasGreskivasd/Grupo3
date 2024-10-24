@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postagens</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <h1>Postagens</h1>
+    
+    <form id="novaPostagemForm" onsubmit="adicionarPostagem(event)">
+        <div class="form-group">
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" class="form-control" placeholder="Digite o título" required>
+        </div>
+        <div class="form-group">
+            <label for="conteudo">Conteúdo:</label>
+            <textarea id="conteudo" class="form-control" placeholder="Digite o conteúdo" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Adicionar Postagem</button>
+    </form>
+
+    <h2>Lista de Postagens</h2>
+    
+    <table id="postagensTable" class="table">
+        <thead>
+            <tr>
+                <th>ID Postagem</th>
+                <th>Título</th>
+                <th>Conteúdo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- As postagens serão preenchidas aqui via JavaScript -->
+        </tbody>
+    </table>
+
+    <script src="js/service.js"></script>
+    <script>
+        async function carregarPostagens() {
+            const postagens = await getData('postagens');
+            const postagensTable = document.getElementById('postagensTable').getElementsByTagName('tbody')[0];
+
+            if (postagens && postagens.length > 0) {
+                postagens.forEach(postagem => {
+                    const row = postagensTable.insertRow();
+                    row.innerHTML = `
+                        <td>${postagem.idPostagem}</td>
+                        <td>${postagem.titulo}</td>
+                        <td>${postagem.conteudo}</td>
+                    `;
+                });
+            } else {
+                postagensTable.innerHTML = '<tr><td colspan="3">Nenhuma postagem encontrada</td></tr>';
+            }
+        }
+
+        async function adicionarPostagem(event) {
+            event.preventDefault();
+            const titulo = document.getElementById('titulo').value;
+            const conteudo = document.getElementById('conteudo').value;
+
+            const novaPostagem = { titulo, conteudo };
+            const response = await sendData('postagens/adicionar', novaPostagem);
+
+            if (response && response.idPostagem) {
+                alert('Postagem adicionada com sucesso!');
+                carregarPostagens();  // Atualiza a lista de postagens
+            } else {
+                alert('Erro ao adicionar postagem.');
+            }
+
+            // Limpar o formulário após o envio
+            document.getElementById('novaPostagemForm').reset();
+        }
+
+        window.onload = carregarPostagens;
+    </script>
+</body>
+</html>

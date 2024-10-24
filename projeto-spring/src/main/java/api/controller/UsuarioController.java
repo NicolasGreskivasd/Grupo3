@@ -10,6 +10,7 @@ import api.entity.Usuario;
 import api.model.LoginRequest;
 import api.model.UsuarioModel;
 import api.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,10 @@ public class UsuarioController {
 
     @CrossOrigin(origins = "*")
     @PostMapping("/cadastrar")
-    public ResponseEntity<Usuario> cadastrarUsuario(@RequestBody UsuarioModel usuarioModel) {
-        Usuario novoUsuario = usuarioService.cadastrarUsuario(usuarioModel);
+    public ResponseEntity<Usuario> cadastrarUsuario(@RequestBody UsuarioModel usuarioModel, HttpServletRequest request) {
+        String ipUsuario = request.getRemoteAddr();
+
+        Usuario novoUsuario = usuarioService.cadastrarUsuario(usuarioModel,ipUsuario);
         return new ResponseEntity<>(novoUsuario, HttpStatus.CREATED);
     }
 

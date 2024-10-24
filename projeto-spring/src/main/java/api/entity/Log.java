@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.security.Timestamp;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -27,7 +28,7 @@ public class Log {
     private String acao;
 
     @Column(name = "data_acao", nullable = false, updatable = false)
-    private Timestamp dataAcao;
+    private Date dataAcao;
 
     @Column(name = "ip_usuario", length = 45)
     private String ipUsuario;

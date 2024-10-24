@@ -1,5 +1,6 @@
 package api.service;
 
+import api.entity.Log;
 import api.entity.Usuario;
 import api.model.UsuarioModel;
 import api.repository.UsuarioRepository;
@@ -19,6 +20,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private LogService logService;
 
     // Método para criptografar a senha usando SHA-256
     public String criptografarSenha(String senha) {
@@ -41,10 +45,10 @@ public class UsuarioService {
         }
     }
 
-    // Lógica para cadastrar um novo usuário
-    public Usuario cadastrarUsuario(UsuarioModel usuarioModel) {
 
-        Usuario usuarioEntity = new Usuario();
+    public Usuario cadastrarUsuario(UsuarioModel usuarioModel,String ipUsuario) {
+
+         Usuario usuarioEntity = new Usuario();
 
         // Criptografa a senha antes de salvar
         String senhaCriptografada = criptografarSenha(usuarioModel.getSenha());
@@ -55,8 +59,17 @@ public class UsuarioService {
         usuarioEntity.setEmail(usuarioModel.getEmail());
         usuarioEntity.setDataCriacao(new Date());
 
-        // Salva o novo usuário no banco de dados
-        return usuarioRepository.save(usuarioEntity);
+       usuarioEntity= usuarioRepository.save(usuarioEntity);
+        // Registrar o log de cadastro do usuário
+        Log log = new Log();
+        log.setIpUsuario(ipUsuario);
+        log.setIdUsuario(usuarioEntity.getIdUsuario());
+        log.setAcao("Cadastrar usuario");
+        log.setDataAcao(new Date());
+        logService.registrarLog(log);
+
+
+        return usuarioEntity;
     }
 
     // Método para login, comparando as senhas
