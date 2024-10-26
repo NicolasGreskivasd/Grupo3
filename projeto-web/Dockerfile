@@ -13,7 +13,7 @@ RUN npm install
 # Copia o restante dos arquivos para o container
 COPY . .
 
-# Mover index.html para a pasta public temporariamente para o build
+# Mover index.html temporariamente para a pasta public para o build
 RUN mkdir -p public && cp ./index.html ./public/index.html
 
 # Define o caminho base da aplicação para localizar o index.html em /projeto-web
