@@ -5,9 +5,9 @@ FROM maven:3.9.9-jdk-11-slim AS build
 WORKDIR /app
 
 # Copia o arquivo pom.xml e o wrapper para o contêiner
-COPY projeto-spring/pom.xml ./
-COPY projeto-spring/.mvn ./.mvn
-COPY projeto-spring/src ./src
+COPY pom.xml ./
+COPY .mvn ./.mvn
+COPY src ./src
 
 # Executa o Maven para construir o JAR
 RUN ./mvnw clean package -DskipTests
