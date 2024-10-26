@@ -13,6 +13,9 @@ RUN npm install
 # Copia o restante dos arquivos para o container
 COPY . .
 
+# Cria o diretório src e move o index.js para lá temporariamente
+RUN mkdir -p src && cp ./index.js ./src/index.js
+
 # Mover index.html temporariamente para a pasta public para o build
 RUN mkdir -p public && cp ./index.html ./public/index.html
 
