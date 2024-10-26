@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REPO = 'NicolasGreskivasd/NicolasGreskivasd-pucpr.github.io' // substitua pelo seu repositório Docker
-        KUBECONFIG_CRED = 'kubeconfig' // nome da credencial kubeconfig no Jenkins para o Kubernetes
-        DOCKER_CRED = 'docker-hub-credentials' // para o acesso ao Docker Hub
+        DOCKER_REPO = 'nicolasgreskivasd/pucpr-gh-pages' // repositório Docker Hub em letras minúsculas
+        KUBECONFIG_CRED = 'kubeconfig' // credencial kubeconfig para Kubernetes
+        DOCKER_CRED = 'docker-hub-credentials' // credencial Docker Hub no Jenkins
     }
 
     stages {
@@ -12,7 +12,8 @@ pipeline {
             steps {
                 dir('projeto-web') {
                     script {
-                        sh 'docker build -t $DOCKER_REPO/projeto-web:latest -f Dockerfile.frontend .'
+                        // Build da imagem Docker para o front-end
+                        sh 'docker build -t $DOCKER_REPO:frontend-latest -f Dockerfile .'
                     }
                 }
             }
@@ -22,7 +23,8 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        sh 'docker build -t $DOCKER_REPO/projeto-spring:latest -f Dockerfile.backend .'
+                        // Build da imagem Docker para o back-end
+                        sh 'docker build -t $DOCKER_REPO:backend-latest -f Dockerfile .'
                     }
                 }
             }
@@ -31,9 +33,10 @@ pipeline {
         stage('Push Images to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CRED) { 
-                        sh 'docker push $DOCKER_REPO/projeto-web:latest'
-                        sh 'docker push $DOCKER_REPO/projeto-spring:latest'
+                    // Login no Docker Hub e push das imagens
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CRED) {
+                        sh 'docker push $DOCKER_REPO:frontend-latest'
+                        sh 'docker push $DOCKER_REPO:backend-latest'
                     }
                 }
             }
