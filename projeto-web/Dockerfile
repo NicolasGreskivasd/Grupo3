@@ -10,6 +10,9 @@ COPY package*.json ./
 # Instala as dependências
 RUN npm install
 
+# Atualiza Babel para a versão mais recente
+RUN npm install @babel/core@^7.16.0 --save-dev
+
 # Copia o restante dos arquivos para o container
 COPY . .
 
