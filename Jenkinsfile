@@ -8,12 +8,19 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                // Faz o checkout do repositório
+                checkout scm
+            }
+        }
+
         stage('Build Frontend') {
             steps {
                 dir('projeto-web') {
                     script {
-                        // Build da imagem Docker para o front-end
-                        sh 'docker build -t $DOCKER_REPO:frontend-latest -f Dockerfile .'
+                        // Construindo a imagem do frontend
+                        sh 'docker build -t $DOCKER_REPO/frontend:latest -f Dockerfile .'
                     }
                 }
             }
@@ -23,7 +30,7 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        // Compilar o projeto Spring Boot para gerar o arquivo JAR
+                        // Usando o Maven Wrapper para construir o JAR
                         sh './mvnw clean package'
                     }
                 }
@@ -34,8 +41,8 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        // Build da imagem Docker para o back-end
-                        sh 'docker build -t $DOCKER_REPO:backend-latest -f Dockerfile .'
+                        // Construindo a imagem do backend
+                        sh 'docker build -t $DOCKER_REPO/backend:latest -f Dockerfile .'
                     }
                 }
             }
@@ -45,9 +52,9 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CRED) {
-                        // Enviar as imagens para o Docker Hub
-                        sh 'docker push $DOCKER_REPO:frontend-latest'
-                        sh 'docker push $DOCKER_REPO:backend-latest'
+                        // Fazendo o push das imagens do Docker Hub
+                        sh 'docker push $DOCKER_REPO/frontend:latest'
+                        sh 'docker push $DOCKER_REPO/backend:latest'
                     }
                 }
             }
@@ -56,10 +63,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
+                    // Usando kubeconfig armazenado no Jenkins para acessar o cluster Kubernetes
                     withCredentials([file(credentialsId: KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
-                        // Aplicar os arquivos de configuração YAML no Kubernetes
+                        // Aplicando os manifests do Kubernetes para deployment e services
                         sh 'kubectl apply -f k8s/mysql-pv.yaml'
+                        sh 'kubectl apply -f k8s/mysql-init-configmap.yaml'
                         sh 'kubectl apply -f k8s/mysql-deployment.yaml'
+                        sh 'kubectl apply -f k8s/mysql-service.yaml'
                         sh 'kubectl apply -f k8s/projeto-web.yaml'
                         sh 'kubectl apply -f k8s/projeto-spring.yaml'
                     }
