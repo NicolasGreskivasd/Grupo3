@@ -27,17 +27,22 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    sh "echo ${DOCKER_CRED} | docker login -u 'your-docker-username' --password-stdin"
-                    sh 'docker push ${DOCKER_REPO}/frontend:latest'
-                    sh 'docker push ${DOCKER_REPO}/backend:latest'
+                    // Realiza login no Docker Hub utilizando as credenciais do Jenkins
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh 'docker push ${DOCKER_REPO}/frontend:latest'
+                        sh 'docker push ${DOCKER_REPO}/backend:latest'
+                    }
                 }
             }
         }
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh 'kubectl apply -f k8s/deployment.yaml'
-                    sh 'kubectl apply -f k8s/service.yaml'
+                    withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
+                        sh 'kubectl apply -f k8s/deployment.yaml'
+                        sh 'kubectl apply -f k8s/service.yaml'
+                    }
                 }
             }
         }
