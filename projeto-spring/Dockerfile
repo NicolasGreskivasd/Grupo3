@@ -1,14 +1,18 @@
-# Dockerfile para o Backend
-FROM openjdk:11-jre-slim
+# Dockerfile para a aplicação Spring Boot
 
-# Define o diretório de trabalho
+# Etapa de build
+FROM maven:3.8.5-openjdk-11 AS builder
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copia o JAR do projeto para o container
-COPY target/*.jar app.jar
+# Etapa de execução
+FROM openjdk:11-jre-slim
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
 
-# Expõe a porta que a aplicação usará
+# Porta exposta pela aplicação Spring Boot
 EXPOSE 8080
 
-# Comando para iniciar a aplicação
-CMD ["java", "-jar", "app.jar"]
+# Comando para executar a aplicação
+ENTRYPOINT ["java", "-jar", "app.jar"]
