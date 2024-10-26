@@ -1,26 +1,11 @@
-# Etapa de construção
-FROM node:16 AS build
-
-WORKDIR /app
-
-# Copia o package.json e o package-lock.json
-COPY package*.json ./
-
-# Instala dependências
-RUN npm install
-
-# Copia o restante do código
-COPY . .
-
-# Executa a build do frontend
-RUN npm run build
-
-# Etapa de produção
+# Usar a imagem Nginx leve
 FROM nginx:alpine
 
-# Copia os arquivos de build para o Nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copia os arquivos estáticos da sua aplicação frontend para o diretório padrão do Nginx
+COPY ./projeto-web /usr/share/nginx/html
 
+# Exponha a porta 80
 EXPOSE 80
 
+# Comando para iniciar o Nginx
 CMD ["nginx", "-g", "daemon off;"]
