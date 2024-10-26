@@ -7,6 +7,7 @@ pipeline {
     }
     stages {
         stage('Build Frontend') {
+            options { timeout(time: 20, unit: 'MINUTES') } // Timeout de 20 minutos para o Build Frontend
             steps {
                 script {
                     // Build da aplicação frontend
@@ -15,6 +16,7 @@ pipeline {
             }
         }
         stage('Build Backend') {
+            options { timeout(time: 30, unit: 'MINUTES') } // Timeout de 30 minutos para o Build Backend
             steps {
                 script {
                     // Build da imagem Docker para o backend
@@ -23,6 +25,7 @@ pipeline {
             }
         }
         stage('Push to Docker Hub') {
+            options { timeout(time: 15, unit: 'MINUTES') } // Timeout de 15 minutos para o Push
             steps {
                 script {
                     // Login e push para o Docker Hub
@@ -35,6 +38,7 @@ pipeline {
             }
         }
         stage('Deploy to Kubernetes') {
+            options { timeout(time: 10, unit: 'MINUTES') } // Timeout de 10 minutos para o Deploy
             steps {
                 script {
                     withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
