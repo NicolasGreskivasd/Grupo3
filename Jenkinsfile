@@ -9,25 +9,23 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 script {
-                    dir('projeto-web') {
-                        sh 'docker build -t ${DOCKER_REPO}/frontend:latest .'
-                    }
+                    // Execute o build da `projeto-web` no contexto raiz
+                    sh 'docker build -t ${DOCKER_REPO}/frontend:latest -f projeto-web/Dockerfile projeto-web'
                 }
             }
         }
         stage('Build Backend') {
             steps {
                 script {
-                    dir('projeto-spring') {
-                        sh 'docker build -t ${DOCKER_REPO}/backend:latest .'
-                    }
+                    // Execute o build da `projeto-spring` no contexto raiz
+                    sh 'docker build -t ${DOCKER_REPO}/backend:latest -f projeto-spring/Dockerfile projeto-spring'
                 }
             }
         }
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Realiza login no Docker Hub utilizando as credenciais do Jenkins
+                    // Login com credenciais do Docker
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                         sh 'docker push ${DOCKER_REPO}/frontend:latest'
