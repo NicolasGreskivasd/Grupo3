@@ -1,22 +1,14 @@
-# Usa uma imagem base Node.js para construção
-FROM node:16 AS build
-
-# Define o diretório de trabalho
-WORKDIR /app
-
-# Copia os arquivos de dependência e instala as dependências
-COPY package*.json ./
-RUN npm install
-
-# Copia o restante dos arquivos e executa o build
-COPY . .
-RUN npm run build
-
-# Usa uma imagem NGINX para servir o front-end
+# Usa uma imagem leve do NGINX para servir arquivos HTML estáticos
 FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expõe a porta padrão do NGINX
+# Define o diretório onde os arquivos serão copiados
+WORKDIR /usr/share/nginx/html
+
+# Copia todos os arquivos do front-end para o diretório padrão do NGINX
+COPY . .
+
+# Expõe a porta 80 para o NGINX
 EXPOSE 80
 
+# Comando padrão para iniciar o NGINX
 CMD ["nginx", "-g", "daemon off;"]
