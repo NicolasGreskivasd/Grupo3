@@ -5,9 +5,6 @@ pipeline {
         KUBECONFIG_CRED = 'kubeconfig' // Nome da credencial kubeconfig para Kubernetes no Jenkins
         DOCKER_CRED = 'docker-hub-credentials' // Nome da credencial do Docker Hub no Jenkins
     }
-    options {
-        timeout(time: 2, unit: 'MINUTES') // Define o tempo limite para o pipeline em 2 minutos
-    }
     stages {
         stage('Build Frontend') {
             steps {
