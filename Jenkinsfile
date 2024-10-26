@@ -19,7 +19,18 @@ pipeline {
             }
         }
 
-        stage('Build Backend') {
+        stage('Build Backend JAR') {
+            steps {
+                dir('projeto-spring') {
+                    script {
+                        // Compilar o backend com Maven para gerar o .jar
+                        sh './mvnw clean package'
+                    }
+                }
+            }
+        }
+
+        stage('Build Backend Docker Image') {
             steps {
                 dir('projeto-spring') {
                     script {
