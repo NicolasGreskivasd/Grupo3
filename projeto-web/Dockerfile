@@ -1,14 +1,26 @@
-# Usa uma imagem leve do NGINX para servir arquivos HTML estáticos
-FROM nginx:alpine
+# Etapa de construção
+FROM node:16 AS build
 
-# Define o diretório onde os arquivos serão copiados
-WORKDIR /usr/share/nginx/html
+WORKDIR /app
 
-# Copia todos os arquivos do front-end para o diretório padrão do NGINX
+# Copia o package.json e o package-lock.json
+COPY package*.json ./
+
+# Instala dependências
+RUN npm install
+
+# Copia o restante do código
 COPY . .
 
-# Expõe a porta 80 para o NGINX
+# Executa a build do frontend
+RUN npm run build
+
+# Etapa de produção
+FROM nginx:alpine
+
+# Copia os arquivos de build para o Nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
 EXPOSE 80
 
-# Comando padrão para iniciar o NGINX
 CMD ["nginx", "-g", "daemon off;"]
