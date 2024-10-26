@@ -9,7 +9,7 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 script {
-                    // Execute o build da `projeto-web` no contexto raiz
+                    // Build da aplicação frontend
                     sh 'docker build -t ${DOCKER_REPO}/frontend:latest -f projeto-web/Dockerfile projeto-web'
                 }
             }
@@ -17,7 +17,7 @@ pipeline {
         stage('Build Backend') {
             steps {
                 script {
-                    // Execute o build da `projeto-spring` no contexto raiz
+                    // Build da imagem Docker para o backend
                     sh 'docker build -t ${DOCKER_REPO}/backend:latest -f projeto-spring/Dockerfile projeto-spring'
                 }
             }
@@ -25,7 +25,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Login com credenciais do Docker
+                    // Login e push para o Docker Hub
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                         sh 'docker push ${DOCKER_REPO}/frontend:latest'
