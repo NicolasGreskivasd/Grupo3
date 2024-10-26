@@ -7,8 +7,8 @@ WORKDIR /usr/share/nginx/html
 # Remove arquivos padrão do Nginx
 RUN rm -rf ./*
 
-# Copia o conteúdo da pasta `projeto-web` para o diretório de trabalho
-COPY projeto-web/ .
+# Copia todos os arquivos da pasta atual para o diretório de trabalho no container
+COPY . .
 
 # Expõe a porta padrão do Nginx
 EXPOSE 80
