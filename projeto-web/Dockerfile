@@ -1,10 +1,10 @@
-# Usar a imagem do Node.js
-FROM node:16 AS build
+# Dockerfile para o Frontend
+FROM node:14
 
 # Define o diretório de trabalho
 WORKDIR /app
 
-# Copia os arquivos de configuração do Node.js
+# Copia o package.json e o package-lock.json
 COPY package*.json ./
 
 # Instala as dependências
@@ -13,17 +13,11 @@ RUN npm install
 # Copia o restante dos arquivos
 COPY . .
 
-# Executa o build da aplicação
+# Compila a aplicação
 RUN npm run build
 
-# Usar a imagem do Nginx para servir a aplicação
-FROM nginx:alpine
+# Expõe a porta que a aplicação usará
+EXPOSE 3000
 
-# Copia os arquivos construídos para o diretório do Nginx
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Expondo a porta 80
-EXPOSE 80
-
-# Comando para executar o Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para iniciar a aplicação
+CMD ["npm", "start"]
