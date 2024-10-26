@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REPO = 'nicolasgreskivasd/pucpr-gh-pages' // repositório Docker Hub em letras minúsculas
-        KUBECONFIG_CRED = 'kubeconfig' // credencial kubeconfig para Kubernetes
-        DOCKER_CRED = 'docker-hub-credentials' // credencial Docker Hub no Jenkins
+        DOCKER_REPO = 'nicolasgreskiv/pucpr-gh-pages' // Repositório Docker no Docker Hub
+        KUBECONFIG_CRED = 'kubeconfig' // Nome da credencial kubeconfig para Kubernetes no Jenkins
+        DOCKER_CRED = 'docker-hub-credentials' // Nome da credencial do Docker Hub no Jenkins
     }
 
     stages {
@@ -23,7 +23,7 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        // Compilar o backend com Maven para gerar o .jar
+                        // Compilar o projeto Spring Boot para gerar o arquivo JAR
                         sh './mvnw clean package'
                     }
                 }
@@ -44,8 +44,8 @@ pipeline {
         stage('Push Images to Docker Hub') {
             steps {
                 script {
-                    // Login no Docker Hub e push das imagens
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CRED) {
+                        // Enviar as imagens para o Docker Hub
                         sh 'docker push $DOCKER_REPO:frontend-latest'
                         sh 'docker push $DOCKER_REPO:backend-latest'
                     }
@@ -56,13 +56,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Usa o kubeconfig armazenado no Jenkins para acessar o cluster Kubernetes
                     withCredentials([file(credentialsId: KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
-                        // Aplica os manifests do Kubernetes para deployment e services
+                        // Aplicar os arquivos de configuração YAML no Kubernetes
                         sh 'kubectl apply -f k8s/mysql-pv.yaml'
-                        sh 'kubectl apply -f k8s/mysql-init-configmap.yaml'
                         sh 'kubectl apply -f k8s/mysql-deployment.yaml'
-                        sh 'kubectl apply -f k8s/mysql-service.yaml'
                         sh 'kubectl apply -f k8s/projeto-web.yaml'
                         sh 'kubectl apply -f k8s/projeto-spring.yaml'
                     }
