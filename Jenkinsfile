@@ -52,17 +52,14 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        // Criar volumes persistentes e PVCs
+                        // Aplicar Persistent Volume e Persistent Volume Claim antes dos deployments
                         sh "microk8s kubectl apply -f k8s/database-pv.yaml"
                         sh "microk8s kubectl apply -f k8s/database-pvc.yaml"
-
-                        // Aplicar as implementações e serviços
+                        
+                        // Aplicar os deployments
                         sh "microk8s kubectl apply -f k8s/database-deployment.yaml"
-                        sh "microk8s kubectl apply -f k8s/database-service.yaml"
                         sh "microk8s kubectl apply -f k8s/backend-deployment.yaml"
-                        sh "microk8s kubectl apply -f k8s/backend-service.yaml"
                         sh "microk8s kubectl apply -f k8s/frontend-deployment.yaml"
-                        sh "microk8s kubectl apply -f k8s/frontend-service.yaml"
                     }
                 }
             }
