@@ -9,12 +9,6 @@ pipeline {
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs() // Limpa o workspace antes do build para evitar arquivos antigos
-            }
-        }
-
         stage('Checkout SCM') {
             steps {
                 checkout scm
@@ -27,19 +21,16 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
 
-                        // Renomear imagens atuais como backup e excluir backups antigos se necessário
+                        // Renomear imagens atuais como backup, excluindo backups antigos se necessário
                         sh """
                             echo "Preparando backup das imagens Docker Hub..."
 
-                            # Renomear a imagem frontend-latest para frontend-backup se existir
                             docker pull ${DOCKER_REPO}:frontend-latest || true
                             docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup || true
 
-                            # Renomear a imagem backend-latest para backend-backup se existir
                             docker pull ${DOCKER_REPO}:backend-latest || true
                             docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup || true
 
-                            # Manter apenas um backup para cada imagem
                             docker images ${DOCKER_REPO} --format '{{.Repository}}:{{.Tag}}' | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
                         """
                     }
@@ -51,8 +42,7 @@ pipeline {
             steps {
                 dir(FRONTEND_DIR) {
                     script {
-                        def frontendTag = "frontend-latest"
-                        sh "docker build --no-cache -t ${DOCKER_REPO}:${frontendTag} -f Dockerfile ."
+                        sh "docker build --no-cache -t ${DOCKER_REPO}:frontend-latest -f Dockerfile ."
                     }
                 }
             }
@@ -62,8 +52,7 @@ pipeline {
             steps {
                 dir(BACKEND_DIR) {
                     script {
-                        def backendTag = "backend-latest"
-                        sh "docker build --no-cache -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
+                        sh "docker build --no-cache -t ${DOCKER_REPO}:backend-latest -f Dockerfile ."
                     }
                 }
             }
@@ -73,7 +62,6 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        // Subir imagens recém-criadas ao Docker Hub
                         sh "docker push ${DOCKER_REPO}:frontend-latest"
                         sh "docker push ${DOCKER_REPO}:backend-latest"
                     }
@@ -93,22 +81,29 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        // Aplicar YAMLs do diretório `k8s` no Kubernetes e forçar atualização
-                        def restartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
                         sh """
                             microk8s kubectl apply -f ${K8S_DIR}/create-base-configmap.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/database-pv.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/database-service.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/database-statefulset.yaml
-
-                            # Força a atualização dos deployments
-                            microk8s kubectl annotate deployment backend-deployment kubectl.kubernetes.io/restartedAt=${restartTime} --overwrite
-                            microk8s kubectl annotate deployment frontend-deployment kubectl.kubernetes.io/restartedAt=${restartTime} --overwrite
-
                             microk8s kubectl apply -f ${K8S_DIR}/backend-deployment.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/backend-service.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/frontend-deployment.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/frontend-service.yaml
+                        """
+                    }
+                }
+            }
+        }
+
+        // Forçar atualização dos deployments para garantir o uso da imagem mais recente
+        stage('Force Update Deployments') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh """
+                            microk8s kubectl rollout restart deployment/backend-deployment
+                            microk8s kubectl rollout restart deployment/frontend-deployment
                         """
                     }
                 }
