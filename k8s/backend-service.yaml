@@ -3,9 +3,10 @@ kind: Service
 metadata:
   name: backend-service
 spec:
-  type: ClusterIP  # Alterar para LoadBalancer se for acessar de fora
+  type: NodePort
   ports:
-  - port: 8080
-    targetPort: 8081  # Corrigido para o port do container
+    - port: 8080
+      targetPort: 8081
+      nodePort: 30001  # Escolha uma porta disponível entre 30000-32767
   selector:
     app: backend
