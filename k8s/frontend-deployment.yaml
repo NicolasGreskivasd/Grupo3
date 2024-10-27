@@ -10,7 +10,7 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0  # permite que até 3 pods fiquem indisponíveis durante a atualização
+      maxUnavailable: 1  # permite que até 3 pods fiquem indisponíveis durante a atualização
       maxSurge: 0        # permite que 1 pod adicional seja criado durante a atualização
   template:
     metadata:
