@@ -8,4 +8,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /data/database
+    path: /data/database  # Certifique-se de que este caminho existe no nó
