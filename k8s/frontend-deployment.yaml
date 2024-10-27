@@ -3,15 +3,15 @@ kind: Deployment
 metadata:
   name: frontend-deployment
 spec:
-  replicas: 5
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 3  # permite que até 3 pods fiquem indisponíveis durante a atualização
-      maxSurge: 1        # permite que 1 pod adicional seja criado durante a atualização
+      maxUnavailable: 0  # permite que até 3 pods fiquem indisponíveis durante a atualização
+      maxSurge: 0        # permite que 1 pod adicional seja criado durante a atualização
   template:
     metadata:
       labels:
