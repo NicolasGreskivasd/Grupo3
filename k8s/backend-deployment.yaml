@@ -10,8 +10,8 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 3  # permite que até 3 pods fiquem indisponíveis durante a atualização
-      maxSurge: 1        # permite que 1 pod adicional seja criado durante a atualização
+      maxUnavailable: 3
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -24,8 +24,8 @@ spec:
         - containerPort: 8081
         env:
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://database-service:3306/projdevsecops"  # Atualizado para usar o nome do serviço
+          value: "jdbc:mysql://database-service:3306/projdevsecops"
         - name: SPRING_DATASOURCE_USERNAME
-          value: "dbgrupo3"  # Atualizado para usar o novo usuário
+          value: "dbgrupo3"
         - name: SPRING_DATASOURCE_PASSWORD
-          value: "grupo3passtestetrocar123"  # Atualizado para usar a nova senha
+          value: "grupo3passtestetrocar123"
