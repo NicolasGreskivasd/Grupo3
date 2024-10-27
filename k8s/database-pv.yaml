@@ -4,8 +4,8 @@ metadata:
   name: database-pv
 spec:
   capacity:
-    storage: 1Gi  # Capacidade ajustada para 1 GiB
+    storage: 1Gi  # Tamanho reduzido para 1GB
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /data/database  # Mantenha isso para desenvolvimento
+    path: /data/database
