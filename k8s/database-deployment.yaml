@@ -3,10 +3,15 @@ kind: Deployment
 metadata:
   name: database-deployment
 spec:
-  replicas: 1
+  replicas: 5  # Alterado para 5 réplicas
   selector:
     matchLabels:
       app: database
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1  # Permite que até 1 pod fique indisponível durante a atualização
+      maxSurge: 1        # Permite que 1 pod adicional seja criado durante a atualização
   template:
     metadata:
       labels:
@@ -19,22 +24,17 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "grupo3rootpassteste123"  # Senha do root
+          value: "grupo3rootpassteste123"
         - name: MYSQL_DATABASE
-          value: "projdevsecops"  # Nome do banco de dados padrão
+          value: "projdevsecops"
         - name: MYSQL_USER
-          value: "dbgrupo3"  # Novo usuário
+          value: "dbgrupo3"
         - name: MYSQL_PASSWORD
-          value: "grupo3passtestetrocar123"  # Senha do novo usuário
+          value: "grupo3passtestetrocar123"
         volumeMounts:
         - name: database-storage
           mountPath: /var/lib/mysql
-        - name: init-script
-          mountPath: /docker-entrypoint-initdb.d  # Diretório para scripts de inicialização
       volumes:
       - name: database-storage
         persistentVolumeClaim:
           claimName: database-pvc
-      - name: init-script
-        configMap:
-          name: create-base-sql  # Nome do ConfigMap que será criado
