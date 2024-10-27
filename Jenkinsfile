@@ -53,16 +53,18 @@ pipeline {
         stage('Cleanup Old Images on Docker Hub') {
             steps {
                 script {
-                    // Limpeza para manter as 3 últimas imagens frontend e backend
-                    sh """
-                    docker login -u \$DOCKER_USER -p \$DOCKER_PASS
-                    for tag in \$(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^frontend-' | sort -r | tail -n +4); do
-                        docker rmi ${DOCKER_REPO}:\$tag || true
-                    done
-                    for tag in \$(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^backend-' | sort -r | tail -n +4); do
-                        docker rmi ${DOCKER_REPO}:\$tag || true
-                    done
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        // Limpeza para manter as 3 últimas imagens frontend e backend
+                        sh """
+                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                        for tag in \$(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^frontend-' | sort -r | tail -n +4); do
+                            docker rmi ${DOCKER_REPO}:\$tag || true
+                        done
+                        for tag in \$(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^backend-' | sort -r | tail -n +4); do
+                            docker rmi ${DOCKER_REPO}:\$tag || true
+                        done
+                        """
+                    }
                 }
             }
         }
