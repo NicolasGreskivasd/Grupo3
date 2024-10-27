@@ -1,18 +1,26 @@
-# Dockerfile para a aplicação Spring Boot
+# Use a imagem do Maven e JDK 17 para compilar a aplicação
+FROM maven:3.8.5-openjdk-17 AS builder
 
-# Etapa de build
-FROM maven:3.8.5-openjdk-11 AS builder
+# Defina o diretório de trabalho
 WORKDIR /app
+
+# Copie o código do projeto para o diretório de trabalho
 COPY . .
+
+# Compile o projeto e crie o pacote
 RUN mvn clean package -DskipTests
 
-# Etapa de execução
-FROM openjdk:11-jre-slim
+# Use uma imagem leve do JDK 17 para o runtime
+FROM openjdk:17-jdk-slim
+
+# Defina o diretório de trabalho no contêiner final
 WORKDIR /app
+
+# Copie o .jar compilado da etapa anterior
 COPY --from=builder /app/target/*.jar app.jar
 
-# Porta exposta pela aplicação Spring Boot
+# Expõe a porta em que a aplicação será executada
 EXPOSE 8080
 
-# Comando para executar a aplicação
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Comando para iniciar a aplicação
+CMD ["java", "-jar", "app.jar"]
