@@ -19,7 +19,7 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "senha"  # Senha do root
+          value: "grupo3rootpassteste123"  # Senha do root
         - name: MYSQL_DATABASE
           value: "projdevsecops"  # Nome do banco de dados padrão
         - name: MYSQL_USER
