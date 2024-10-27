@@ -19,17 +19,22 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "senha"
+          value: "senha"  # Senha do root
         - name: MYSQL_DATABASE
-          value: "projdevsecops"
+          value: "projdevsecops"  # Nome do banco de dados padrão
         - name: MYSQL_USER
-          value: "user"
+          value: "dbgrupo3"  # Novo usuário
         - name: MYSQL_PASSWORD
-          value: "senha"
+          value: "grupo3passtestetrocar123"  # Senha do novo usuário
         volumeMounts:
         - name: database-storage
           mountPath: /var/lib/mysql
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d  # Diretório para scripts de inicialização
       volumes:
       - name: database-storage
         persistentVolumeClaim:
           claimName: database-pvc
+      - name: init-script
+        configMap:
+          name: create-base-sql  # Nome do ConfigMap que será criado
