@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
                 checkout scm
             }
@@ -12,7 +12,7 @@ pipeline {
             steps {
                 dir('projeto-web') {
                     script {
-                        sh 'docker build -t nicolasgreskiv/pucpr-gh-pages:frontend-latest -f Dockerfile .'
+                        docker.build("nicolasgreskiv/pucpr-gh-pages:frontend-latest", "-f Dockerfile .")
                     }
                 }
             }
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        sh 'docker build -t nicolasgreskiv/pucpr-gh-pages:backend-latest -f Dockerfile .'
+                        docker.build("nicolasgreskiv/pucpr-gh-pages:backend-latest", "-f Dockerfile .")
                     }
                 }
             }
@@ -31,9 +31,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-                        sh 'docker push nicolasgreskiv/pucpr-gh-pages:frontend-latest'
-                        sh 'docker push nicolasgreskiv/pucpr-gh-pages:backend-latest'
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker push nicolasgreskiv/pucpr-gh-pages:frontend-latest"
+                        sh "docker push nicolasgreskiv/pucpr-gh-pages:backend-latest"
                     }
                 }
             }
@@ -43,11 +44,17 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh 'kubectl apply -f k8s/deployment.yaml'  // Ajuste o caminho se necessário
-                        sh 'kubectl apply -f k8s/service.yaml'     // Ajuste o caminho se necessário
+                        sh "kubectl apply -f k8s/deployment.yaml"
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up...'
+            cleanWs()
         }
     }
 }
