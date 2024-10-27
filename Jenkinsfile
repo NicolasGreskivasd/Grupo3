@@ -20,6 +20,8 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+
+                        // Renomear imagens atuais como backup, excluindo backups antigos se necessário
                         sh """
                             echo "Preparando backup das imagens Docker Hub..."
 
@@ -40,9 +42,7 @@ pipeline {
             steps {
                 dir(FRONTEND_DIR) {
                     script {
-                        def frontendTag = "frontend-${new Date().format("yyyyMMdd-HHmmss")}"
-                        sh "docker build --no-cache -t ${DOCKER_REPO}:${frontendTag} -f Dockerfile ."
-                        sh "docker tag ${DOCKER_REPO}:${frontendTag} ${DOCKER_REPO}:frontend-latest"
+                        sh "docker build --no-cache -t ${DOCKER_REPO}:frontend-latest -f Dockerfile ."
                     }
                 }
             }
@@ -52,9 +52,7 @@ pipeline {
             steps {
                 dir(BACKEND_DIR) {
                     script {
-                        def backendTag = "backend-${new Date().format("yyyyMMdd-HHmmss")}"
-                        sh "docker build --no-cache -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
-                        sh "docker tag ${DOCKER_REPO}:${backendTag} ${DOCKER_REPO}:backend-latest"
+                        sh "docker build --no-cache -t ${DOCKER_REPO}:backend-latest -f Dockerfile ."
                     }
                 }
             }
@@ -71,14 +69,10 @@ pipeline {
             }
         }
 
-        stage('Update YAML with Latest Image Tag') {
+        stage('Test kubectl') {
             steps {
                 script {
-                    // Atualizar os arquivos YAML com a tag gerada
-                    sh """
-                        sed -i 's|image: ${DOCKER_REPO}:frontend-latest|image: ${DOCKER_REPO}:${frontendTag}|' ${K8S_DIR}/frontend-deployment.yaml
-                        sed -i 's|image: ${DOCKER_REPO}:backend-latest|image: ${DOCKER_REPO}:${backendTag}|' ${K8S_DIR}/backend-deployment.yaml
-                    """
+                    sh 'microk8s kubectl version --client'
                 }
             }
         }
@@ -102,6 +96,7 @@ pipeline {
             }
         }
 
+        // Forçar atualização dos deployments para garantir o uso da imagem mais recente
         stage('Force Update Deployments') {
             steps {
                 script {
