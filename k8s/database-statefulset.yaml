@@ -1,17 +1,13 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: database-deployment
+  name: database
 spec:
-  replicas: 5  # Alterado para 5 réplicas
+  serviceName: "database-service"
+  replicas: 5
   selector:
     matchLabels:
       app: database
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1  # Permite que até 1 pod fique indisponível durante a atualização
-      maxSurge: 1        # Permite que 1 pod adicional seja criado durante a atualização
   template:
     metadata:
       labels:
