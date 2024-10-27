@@ -21,12 +21,32 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
 
-                        // Renomear imagens `latest` existentes como `backup1`
+                        // Renomear imagens existentes como backup e emitir alerta
                         sh """
-                            docker pull ${DOCKER_REPO}:frontend-latest || true
-                            docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup1 || true
-                            docker pull ${DOCKER_REPO}:backend-latest || true
-                            docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup1 || true
+                            echo "Preparando Docker Hub: renomeando imagens existentes e removendo backups antigos..."
+
+                            if docker pull ${DOCKER_REPO}:frontend-latest; then
+                                docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup1
+                                docker rmi ${DOCKER_REPO}:frontend-latest
+                                echo "Alerta: Imagem frontend renomeada para frontend-backup1 e frontend-latest removida."
+                            else
+                                echo "Nenhuma imagem frontend-latest encontrada para renomeação."
+                            fi
+
+                            if docker pull ${DOCKER_REPO}:backend-latest; then
+                                docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup1
+                                docker rmi ${DOCKER_REPO}:backend-latest
+                                echo "Alerta: Imagem backend renomeada para backend-backup1 e backend-latest removida."
+                            else
+                                echo "Nenhuma imagem backend-latest encontrada para renomeação."
+                            fi
+
+                            # Excluir backups antigos mantendo apenas o backup mais recente e emitir alerta
+                            if docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi; then
+                                echo "Alerta: Backups antigos removidos com sucesso."
+                            else
+                                echo "Nenhum backup adicional encontrado para remoção."
+                            fi
                         """
                     }
                 }
@@ -64,16 +84,6 @@ pipeline {
                         sh "docker push ${DOCKER_REPO}:frontend-latest"
                         sh "docker push ${DOCKER_REPO}:backend-latest"
                     }
-                }
-            }
-        }
-
-        stage('Cleanup Old Backups') {
-            steps {
-                script {
-                    sh """
-                        docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
-                    """
                 }
             }
         }
