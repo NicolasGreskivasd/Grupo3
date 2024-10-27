@@ -11,7 +11,6 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                // Checkout do repositório para acessar os diretórios do front-end e back-end
                 checkout scm
             }
         }
@@ -33,7 +32,7 @@ pipeline {
                             docker rmi ${DOCKER_REPO}:backend-latest || true
 
                             # Excluir backups antigos, mantendo apenas o mais recente
-                            docker images ${DOCKER_REPO} --format '{{.Repository}}:{{.Tag}}' | grep '-backup' | sort | head -n -1 | xargs -r docker rmi || true
+                            docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
                         """
                     }
                 }
@@ -45,8 +44,8 @@ pipeline {
                 dir(FRONTEND_DIR) {
                     script {
                         def frontendTag = "frontend-${new Date().format("yyyyMMdd-HHmmss")}"
-                        docker.build("${DOCKER_REPO}:${frontendTag}", "-f Dockerfile .")
-                        docker.tag("${DOCKER_REPO}:${frontendTag}", "${DOCKER_REPO}:frontend-latest")
+                        sh "docker build -t ${DOCKER_REPO}:${frontendTag} -f Dockerfile ."
+                        sh "docker tag ${DOCKER_REPO}:${frontendTag} ${DOCKER_REPO}:frontend-latest"
                     }
                 }
             }
@@ -57,8 +56,8 @@ pipeline {
                 dir(BACKEND_DIR) {
                     script {
                         def backendTag = "backend-${new Date().format("yyyyMMdd-HHmmss")}"
-                        docker.build("${DOCKER_REPO}:${backendTag}", "-f Dockerfile .")
-                        docker.tag("${DOCKER_REPO}:${backendTag}", "${DOCKER_REPO}:backend-latest")
+                        sh "docker build -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
+                        sh "docker tag ${DOCKER_REPO}:${backendTag} ${DOCKER_REPO}:backend-latest"
                     }
                 }
             }
