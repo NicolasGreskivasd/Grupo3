@@ -15,15 +15,27 @@ pipeline {
             }
         }
 
+        stage('Clear Local Docker Cache and Images') {
+            steps {
+                script {
+                    // Limpar todas as imagens e cache local do Docker
+                    sh """
+                        echo "Removendo todas as imagens e cache do Docker local..."
+                        docker system prune -af --volumes || true
+                    """
+                }
+            }
+        }
+
         stage('Clear Docker Hub') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
 
-                        // Remove todas as imagens existentes do repositório no Docker Hub
+                        // Remover imagens existentes do Docker Hub
                         sh """
-                            echo "Removendo todas as imagens anteriores do Docker Hub..."
+                            echo "Removendo todas as imagens antigas no Docker Hub..."
                             docker rmi -f ${DOCKER_REPO}:frontend-latest || true
                             docker rmi -f ${DOCKER_REPO}:backend-latest || true
                         """
@@ -37,7 +49,7 @@ pipeline {
                 dir(FRONTEND_DIR) {
                     script {
                         def frontendTag = "frontend-latest"
-                        sh "docker build -t ${DOCKER_REPO}:${frontendTag} -f Dockerfile ."
+                        sh "docker build --no-cache -t ${DOCKER_REPO}:${frontendTag} -f Dockerfile ."
                     }
                 }
             }
@@ -48,7 +60,7 @@ pipeline {
                 dir(BACKEND_DIR) {
                     script {
                         def backendTag = "backend-latest"
-                        sh "docker build -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
+                        sh "docker build --no-cache -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
                     }
                 }
             }
