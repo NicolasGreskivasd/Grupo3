@@ -49,6 +49,12 @@ pipeline {
                     }
                 }
             }
+            post {
+                always {
+                    echo 'Deleting frontend directory...'
+                    sh "rm -rf ${FRONTEND_DIR}"
+                }
+            }
         }
 
         stage('Build Backend') {
@@ -59,6 +65,12 @@ pipeline {
                         sh "docker build -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
                         sh "docker tag ${DOCKER_REPO}:${backendTag} ${DOCKER_REPO}:backend-latest"
                     }
+                }
+            }
+            post {
+                always {
+                    echo 'Deleting backend directory...'
+                    sh "rm -rf ${BACKEND_DIR}"
                 }
             }
         }
