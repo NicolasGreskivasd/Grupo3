@@ -12,7 +12,7 @@ pipeline {
             steps {
                 dir('projeto-web') {
                     script {
-                        docker.build("nicolasgreskiv/pucpr-gh-pages:frontend-latest", "-f Dockerfile .")
+                        docker.build("nicolasgreskiv/pucpr-gh-pages:frontend-latest", "--no-cache -f Dockerfile .")
                     }
                 }
             }
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        docker.build("nicolasgreskiv/pucpr-gh-pages:backend-latest", "-f Dockerfile .")
+                        docker.build("nicolasgreskiv/pucpr-gh-pages:backend-latest", "--no-cache -f Dockerfile .")
                     }
                 }
             }
