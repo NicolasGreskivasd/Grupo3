@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_REPO = 'nicolasgreskiv/pucpr-gh-pages'
-        TIMESTAMP = new Date().format("yyyyMMdd-HHmmss") // Timestamp único para cada build
+        TIMESTAMP = new Date().format("yyyyMMdd-HHmmss")
     }
 
     stages {
@@ -18,7 +18,7 @@ pipeline {
                 dir('projeto-web') {
                     script {
                         docker.build("${DOCKER_REPO}:frontend-${TIMESTAMP}", "-f Dockerfile .")
-                        docker.tag("${DOCKER_REPO}:frontend-${TIMESTAMP}", "${DOCKER_REPO}:frontend-latest")
+                        sh "docker tag ${DOCKER_REPO}:frontend-${TIMESTAMP} ${DOCKER_REPO}:frontend-latest"
                     }
                 }
             }
@@ -29,7 +29,7 @@ pipeline {
                 dir('projeto-spring') {
                     script {
                         docker.build("${DOCKER_REPO}:backend-${TIMESTAMP}", "-f Dockerfile .")
-                        docker.tag("${DOCKER_REPO}:backend-${TIMESTAMP}", "${DOCKER_REPO}:backend-latest")
+                        sh "docker tag ${DOCKER_REPO}:backend-${TIMESTAMP} ${DOCKER_REPO}:backend-latest"
                     }
                 }
             }
@@ -41,7 +41,6 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
                         
-                        // Envia ambas as imagens, a de timestamp e a latest
                         sh "docker push ${DOCKER_REPO}:frontend-${TIMESTAMP}"
                         sh "docker push ${DOCKER_REPO}:frontend-latest"
                         sh "docker push ${DOCKER_REPO}:backend-${TIMESTAMP}"
