@@ -15,38 +15,17 @@ pipeline {
             }
         }
 
-        stage('Prepare Docker Hub') {
+        stage('Clear Docker Hub') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
 
-                        // Renomear imagens existentes como backup e emitir alerta
+                        // Remove todas as imagens existentes do repositório no Docker Hub
                         sh """
-                            echo "Preparando Docker Hub: renomeando imagens existentes e removendo backups antigos..."
-
-                            if docker pull ${DOCKER_REPO}:frontend-latest; then
-                                docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup1
-                                docker rmi ${DOCKER_REPO}:frontend-latest
-                                echo "Alerta: Imagem frontend renomeada para frontend-backup1 e frontend-latest removida."
-                            else
-                                echo "Nenhuma imagem frontend-latest encontrada para renomeação."
-                            fi
-
-                            if docker pull ${DOCKER_REPO}:backend-latest; then
-                                docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup1
-                                docker rmi ${DOCKER_REPO}:backend-latest
-                                echo "Alerta: Imagem backend renomeada para backend-backup1 e backend-latest removida."
-                            else
-                                echo "Nenhuma imagem backend-latest encontrada para renomeação."
-                            fi
-
-                            # Excluir backups antigos mantendo apenas o backup mais recente e emitir alerta
-                            if docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi; then
-                                echo "Alerta: Backups antigos removidos com sucesso."
-                            else
-                                echo "Nenhum backup adicional encontrado para remoção."
-                            fi
+                            echo "Removendo todas as imagens anteriores do Docker Hub..."
+                            docker rmi -f ${DOCKER_REPO}:frontend-latest || true
+                            docker rmi -f ${DOCKER_REPO}:backend-latest || true
                         """
                     }
                 }
@@ -57,9 +36,8 @@ pipeline {
             steps {
                 dir(FRONTEND_DIR) {
                     script {
-                        def frontendTag = "frontend-${new Date().format("yyyyMMdd-HHmmss")}"
+                        def frontendTag = "frontend-latest"
                         sh "docker build -t ${DOCKER_REPO}:${frontendTag} -f Dockerfile ."
-                        sh "docker tag ${DOCKER_REPO}:${frontendTag} ${DOCKER_REPO}:frontend-latest"
                     }
                 }
             }
@@ -69,9 +47,8 @@ pipeline {
             steps {
                 dir(BACKEND_DIR) {
                     script {
-                        def backendTag = "backend-${new Date().format("yyyyMMdd-HHmmss")}"
+                        def backendTag = "backend-latest"
                         sh "docker build -t ${DOCKER_REPO}:${backendTag} -f Dockerfile ."
-                        sh "docker tag ${DOCKER_REPO}:${backendTag} ${DOCKER_REPO}:backend-latest"
                     }
                 }
             }
