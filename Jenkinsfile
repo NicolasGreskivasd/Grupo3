@@ -20,19 +20,14 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                        
-                        // Renomear qualquer imagem atual para 'backup1' e remover backups antigos se necessário
+
+                        // Renomear as imagens no Docker Hub como backup1
                         sh """
                             docker pull ${DOCKER_REPO}:frontend-latest || true
                             docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup1 || true
-                            docker rmi ${DOCKER_REPO}:frontend-latest || true
-                            
+
                             docker pull ${DOCKER_REPO}:backend-latest || true
                             docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup1 || true
-                            docker rmi ${DOCKER_REPO}:backend-latest || true
-
-                            # Limpar backups antigos além de 'backup1'
-                            docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
                         """
                     }
                 }
@@ -49,12 +44,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                always {
-                    echo 'Deleting frontend directory...'
-                    sh "rm -rf ${FRONTEND_DIR}"
-                }
-            }
         }
 
         stage('Build Backend') {
@@ -67,12 +56,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                always {
-                    echo 'Deleting backend directory...'
-                    sh "rm -rf ${BACKEND_DIR}"
-                }
-            }
         }
 
         stage('Push to Docker Hub') {
@@ -82,6 +65,17 @@ pipeline {
                         sh "docker push ${DOCKER_REPO}:frontend-latest"
                         sh "docker push ${DOCKER_REPO}:backend-latest"
                     }
+                }
+            }
+        }
+
+        stage('Cleanup Old Backups') {
+            steps {
+                script {
+                    // Excluir backups antigos se houver mais de um
+                    sh """
+                        docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
+                    """
                 }
             }
         }
