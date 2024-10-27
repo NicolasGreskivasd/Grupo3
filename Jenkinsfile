@@ -25,12 +25,13 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Login e push para o Docker Hub
+                    // Login e push para o Docker Hub com segurança
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                        // Realiza o push com as tags ajustadas
-                        sh 'docker push ${DOCKER_REPO}:frontend-latest'
-                        sh 'docker push ${DOCKER_REPO}:backend-latest'
+                        sh '''#!/bin/bash
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${DOCKER_REPO}:frontend-latest
+                            docker push ${DOCKER_REPO}:backend-latest
+                        '''
                     }
                 }
             }
