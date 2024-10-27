@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_REPO = 'nicolasgreskiv/pucpr-gh-pages'
-        TIMESTAMP = new Date().format("yyyyMMdd-HHmmss")
-    }
-
     stages {
         stage('Checkout SCM') {
             steps {
@@ -13,12 +8,40 @@ pipeline {
             }
         }
 
+        stage('Prepare Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        
+                        // Renomear as imagens frontend e backend como backup
+                        def repo = "nicolasgreskiv/pucpr-gh-pages"
+                        sh """
+                            # Renomear frontend-latest para frontend-backup, se existir
+                            docker pull ${repo}:frontend-latest || true
+                            docker tag ${repo}:frontend-latest ${repo}:frontend-backup || true
+                            docker rmi ${repo}:frontend-latest || true
+                            
+                            # Renomear backend-latest para backend-backup, se existir
+                            docker pull ${repo}:backend-latest || true
+                            docker tag ${repo}:backend-latest ${repo}:backend-backup || true
+                            docker rmi ${repo}:backend-latest || true
+
+                            # Deletar imagens antigas de backup, mantendo apenas a mais recente
+                            docker images ${repo} --format '{{.Repository}}:{{.Tag}}' | grep '-backup' | sort | head -n -1 | xargs -r docker rmi || true
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Build Frontend') {
             steps {
                 dir('projeto-web') {
                     script {
-                        docker.build("${DOCKER_REPO}:frontend-${TIMESTAMP}", "-f Dockerfile .")
-                        sh "docker tag ${DOCKER_REPO}:frontend-${TIMESTAMP} ${DOCKER_REPO}:frontend-latest"
+                        def newTag = "frontend-${new Date().format("yyyyMMdd-HHmmss")}"
+                        docker.build("nicolasgreskiv/pucpr-gh-pages:${newTag}", "-f Dockerfile .")
+                        docker.tag("nicolasgreskiv/pucpr-gh-pages:${newTag}", "nicolasgreskiv/pucpr-gh-pages:frontend-latest")
                     }
                 }
             }
@@ -28,8 +51,9 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        docker.build("${DOCKER_REPO}:backend-${TIMESTAMP}", "-f Dockerfile .")
-                        sh "docker tag ${DOCKER_REPO}:backend-${TIMESTAMP} ${DOCKER_REPO}:backend-latest"
+                        def newTag = "backend-${new Date().format("yyyyMMdd-HHmmss")}"
+                        docker.build("nicolasgreskiv/pucpr-gh-pages:${newTag}", "-f Dockerfile .")
+                        docker.tag("nicolasgreskiv/pucpr-gh-pages:${newTag}", "nicolasgreskiv/pucpr-gh-pages:backend-latest")
                     }
                 }
             }
@@ -39,31 +63,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
-                        
-                        sh "docker push ${DOCKER_REPO}:frontend-${TIMESTAMP}"
-                        sh "docker push ${DOCKER_REPO}:frontend-latest"
-                        sh "docker push ${DOCKER_REPO}:backend-${TIMESTAMP}"
-                        sh "docker push ${DOCKER_REPO}:backend-latest"
-                    }
-                }
-            }
-        }
-
-        stage('Cleanup Old Images on Docker Hub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        // Limpeza para manter as 3 últimas imagens frontend e backend
-                        sh """
-                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                        for tag in \$(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^frontend-' | sort -r | tail -n +4); do
-                            docker rmi ${DOCKER_REPO}:\$tag || true
-                        done
-                        for tag in \$(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^backend-' | sort -r | tail -n +4); do
-                            docker rmi ${DOCKER_REPO}:\$tag || true
-                        done
-                        """
+                        // Push das novas imagens com tags de build e latest
+                        sh "docker push nicolasgreskiv/pucpr-gh-pages:frontend-latest"
+                        sh "docker push nicolasgreskiv/pucpr-gh-pages:backend-latest"
                     }
                 }
             }
@@ -97,7 +99,7 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up workspace...'
+            echo 'Cleaning up...'
             cleanWs()
         }
     }
