@@ -7,6 +7,11 @@ spec:
   selector:
     matchLabels:
       app: frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 3  # permite que até 3 pods fiquem indisponíveis durante a atualização
+      maxSurge: 1        # permite que 1 pod adicional seja criado durante a atualização
   template:
     metadata:
       labels:
