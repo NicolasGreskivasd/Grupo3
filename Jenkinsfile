@@ -57,7 +57,6 @@ pipeline {
                         
                         // Aplicar Persistent Volume e Persistent Volume Claim antes do StatefulSet
                         sh "microk8s kubectl apply -f k8s/database-pv.yaml"
-                        sh "microk8s kubectl apply -f k8s/database-pvc.yaml"
                         
                         // Aplicar o StatefulSet do banco de dados e o serviço
                         sh "microk8s kubectl apply -f k8s/database-service.yaml"
