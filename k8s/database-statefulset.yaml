@@ -4,7 +4,7 @@ metadata:
   name: database
 spec:
   serviceName: "database-service"
-  replicas: 1
+  replicas: 1  # Manter apenas 1 réplica
   selector:
     matchLabels:
       app: database
