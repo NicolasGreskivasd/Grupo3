@@ -9,35 +9,38 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs() // Limpa o workspace antes do build para evitar arquivos antigos
+            }
+        }
+
         stage('Checkout SCM') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Clear Local Docker Cache and Images') {
-            steps {
-                script {
-                    // Limpar todas as imagens e cache local do Docker
-                    sh """
-                        echo "Removendo todas as imagens e cache do Docker local..."
-                        docker system prune -af --volumes || true
-                    """
-                }
-            }
-        }
-
-        stage('Clear Docker Hub') {
+        stage('Prepare Docker Hub Backup') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
 
-                        // Remover imagens existentes do Docker Hub
+                        // Renomear imagens atuais como backup e excluir backups antigos se necessário
                         sh """
-                            echo "Removendo todas as imagens antigas no Docker Hub..."
-                            docker rmi -f ${DOCKER_REPO}:frontend-latest || true
-                            docker rmi -f ${DOCKER_REPO}:backend-latest || true
+                            echo "Preparando backup das imagens Docker Hub..."
+
+                            # Renomear a imagem frontend-latest para frontend-backup se existir
+                            docker pull ${DOCKER_REPO}:frontend-latest || true
+                            docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup || true
+
+                            # Renomear a imagem backend-latest para backend-backup se existir
+                            docker pull ${DOCKER_REPO}:backend-latest || true
+                            docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup || true
+
+                            # Manter apenas um backup para cada imagem
+                            docker images ${DOCKER_REPO} --format '{{.Repository}}:{{.Tag}}' | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
                         """
                     }
                 }
@@ -70,6 +73,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        // Enviar as novas imagens para o Docker Hub
                         sh "docker push ${DOCKER_REPO}:frontend-latest"
                         sh "docker push ${DOCKER_REPO}:backend-latest"
                     }
@@ -89,6 +93,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        // Aplicar YAMLs do diretório `k8s` no Kubernetes
                         sh """
                             microk8s kubectl apply -f ${K8S_DIR}/create-base-configmap.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/database-pv.yaml
@@ -108,7 +113,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace...'
-            cleanWs()
+            cleanWs() // Limpa o workspace após o build
         }
     }
 }
