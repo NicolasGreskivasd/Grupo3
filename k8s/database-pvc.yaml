@@ -7,4 +7,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  # Ajustado para 1 GiB
+      storage: 1Gi  # Tamanho reduzido para 1GB
