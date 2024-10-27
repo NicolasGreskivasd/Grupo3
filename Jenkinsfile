@@ -44,7 +44,19 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh "kubectl apply -f k8s/deployment.yaml"
+                        // Deploy Backend
+                        sh "kubectl apply -f k8s/backend-deployment.yaml"
+                        sh "kubectl apply -f k8s/backend-service.yaml"
+
+                        // Deploy Frontend
+                        sh "kubectl apply -f k8s/frontend-deployment.yaml"
+                        sh "kubectl apply -f k8s/frontend-service.yaml"
+
+                        // Deploy Database
+                        sh "kubectl apply -f k8s/database-pv.yaml"
+                        sh "kubectl apply -f k8s/database-pvc.yaml"
+                        sh "kubectl apply -f k8s/database-deployment.yaml"
+                        sh "kubectl apply -f k8s/database-service.yaml"
                     }
                 }
             }
