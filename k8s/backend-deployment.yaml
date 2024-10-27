@@ -24,8 +24,8 @@ spec:
         - containerPort: 8081
         env:
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://<database-service-name>:<database-port>/<database-name>"
+          value: "jdbc:mysql://database-service:3306/projdevsecops"  # Atualizado para usar o nome do serviço
         - name: SPRING_DATASOURCE_USERNAME
-          value: "<username>"
+          value: "dbgrupo3"  # Atualizado para usar o novo usuário
         - name: SPRING_DATASOURCE_PASSWORD
-          value: "<password>"
+          value: "grupo3passtestetrocar123"  # Atualizado para usar a nova senha
