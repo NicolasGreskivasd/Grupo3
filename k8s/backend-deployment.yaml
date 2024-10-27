@@ -20,6 +20,7 @@ spec:
       containers:
       - name: backend
         image: nicolasgreskiv/pucpr-gh-pages:backend-latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8081
         env:
