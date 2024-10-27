@@ -40,6 +40,12 @@ pipeline {
             }
         }
 
+        stage('Test kubectl') {
+            steps {
+                sh 'kubectl version --client'
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
