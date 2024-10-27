@@ -21,7 +21,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                         
-                        // Renomear imagens antigas como backup e manter apenas o último backup
+                        // Renomear imagens existentes para backup e remover antigos backups
                         sh """
                             docker pull ${DOCKER_REPO}:frontend-latest || true
                             docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup || true
@@ -31,8 +31,8 @@ pipeline {
                             docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup || true
                             docker rmi ${DOCKER_REPO}:backend-latest || true
 
-                            # Excluir backups antigos, mantendo apenas o mais recente
-                            docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
+                            # Remover backups antigos, mantendo apenas os três mais recentes
+                            docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | sort -r | tail -n +4 | xargs -r docker rmi || true
                         """
                     }
                 }
@@ -98,7 +98,6 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        // Aplicar YAMLs do diretório `k8s` no Kubernetes
                         sh """
                             microk8s kubectl apply -f ${K8S_DIR}/create-base-configmap.yaml
                             microk8s kubectl apply -f ${K8S_DIR}/database-pv.yaml
