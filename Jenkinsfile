@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_REPO = 'nicolasgreskiv/pucpr-gh-pages'
+        TIMESTAMP = new Date().format("yyyyMMdd-HHmmss") // Timestamp único para cada build
+    }
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -12,7 +17,8 @@ pipeline {
             steps {
                 dir('projeto-web') {
                     script {
-                        docker.build("nicolasgreskiv/pucpr-gh-pages:frontend-latest", "-f Dockerfile .")
+                        docker.build("${DOCKER_REPO}:frontend-${TIMESTAMP}", "-f Dockerfile .")
+                        docker.tag("${DOCKER_REPO}:frontend-${TIMESTAMP}", "${DOCKER_REPO}:frontend-latest")
                     }
                 }
             }
@@ -22,7 +28,8 @@ pipeline {
             steps {
                 dir('projeto-spring') {
                     script {
-                        docker.build("nicolasgreskiv/pucpr-gh-pages:backend-latest", "-f Dockerfile .")
+                        docker.build("${DOCKER_REPO}:backend-${TIMESTAMP}", "-f Dockerfile .")
+                        docker.tag("${DOCKER_REPO}:backend-${TIMESTAMP}", "${DOCKER_REPO}:backend-latest")
                     }
                 }
             }
@@ -33,9 +40,30 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                        sh "docker push nicolasgreskiv/pucpr-gh-pages:frontend-latest"
-                        sh "docker push nicolasgreskiv/pucpr-gh-pages:backend-latest"
+                        
+                        // Envia ambas as imagens, a de timestamp e a latest
+                        sh "docker push ${DOCKER_REPO}:frontend-${TIMESTAMP}"
+                        sh "docker push ${DOCKER_REPO}:frontend-latest"
+                        sh "docker push ${DOCKER_REPO}:backend-${TIMESTAMP}"
+                        sh "docker push ${DOCKER_REPO}:backend-latest"
                     }
+                }
+            }
+        }
+
+        stage('Cleanup Old Images on Docker Hub') {
+            steps {
+                script {
+                    // Limpeza para manter as 3 últimas imagens frontend e backend
+                    sh """
+                    docker login -u $DOCKER_USER -p $DOCKER_PASS
+                    for tag in $(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^frontend-' | sort -r | tail -n +4); do
+                        docker rmi ${DOCKER_REPO}:$tag || true
+                    done
+                    for tag in $(curl -s https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/?page_size=100 | jq -r '.results | .[] | .name' | grep '^backend-' | sort -r | tail -n +4); do
+                        docker rmi ${DOCKER_REPO}:$tag || true
+                    done
+                    """
                 }
             }
         }
@@ -52,25 +80,14 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        // Aplicar ConfigMap para o script de criação do banco de dados
                         sh "microk8s kubectl apply -f k8s/create-base-configmap.yaml"
-                        
-                        // Aplicar Persistent Volume e Persistent Volume Claim antes do StatefulSet
                         sh "microk8s kubectl apply -f k8s/database-pv.yaml"
-                        
-                        // Aplicar o StatefulSet do banco de dados e o serviço
                         sh "microk8s kubectl apply -f k8s/database-service.yaml"
                         sh "microk8s kubectl apply -f k8s/database-statefulset.yaml"
-                        
-                        // Aplicar os deployments para o backend e frontend
                         sh "microk8s kubectl apply -f k8s/backend-deployment.yaml"
                         sh "microk8s kubectl apply -f k8s/backend-service.yaml"
                         sh "microk8s kubectl apply -f k8s/frontend-deployment.yaml"
                         sh "microk8s kubectl apply -f k8s/frontend-service.yaml"
-
-                        // Forçar a reinicialização dos pods para usar a nova imagem
-                        sh "microk8s kubectl rollout restart deployment backend-deployment"
-                        sh "microk8s kubectl rollout restart deployment frontend-deployment"
                     }
                 }
             }
@@ -79,7 +96,7 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up...'
+            echo 'Cleaning up workspace...'
             cleanWs()
         }
     }
