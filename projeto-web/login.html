@@ -1,120 +1,47 @@
-pipeline {
-    agent any
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <div class="form-group">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Senha:</label>
+            <input type="password" id="password">
+        </div>
+        <button class="button" onclick="login()">Entrar</button>
+        <p id="errorMessage" class="error"></p>
+    </div>
 
-    environment {
-        DOCKER_REPO = 'nicolasgreskiv/pucpr-gh-pages'
-        FRONTEND_DIR = 'projeto-web'
-        BACKEND_DIR = 'projeto-spring'
-        K8S_DIR = 'k8s'
-    }
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-    stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
+            const response = await fetch('backend-service:8080/api/usuarios/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                alert("Login bem-sucedido");
+                // Redirecionar para a página principal, por exemplo
+                window.location.href = 'paginainicial.html'; 
+            } else {
+                document.getElementById('errorMessage').textContent = 'Credenciais inválidas';
             }
         }
-
-        stage('Prepare Docker Hub Backup') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-
-                        // Renomear imagens atuais como backup, excluindo backups antigos se necessário
-                        sh """
-                            echo "Preparando backup das imagens Docker Hub..."
-
-                            docker pull ${DOCKER_REPO}:frontend-latest || true
-                            docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup || true
-
-                            docker pull ${DOCKER_REPO}:backend-latest || true
-                            docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup || true
-
-                            docker images ${DOCKER_REPO} --format '{{.Repository}}:{{.Tag}}' | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir(FRONTEND_DIR) {
-                    script {
-                        sh "docker build --no-cache -t ${DOCKER_REPO}:frontend-latest -f Dockerfile ."
-                    }
-                }
-            }
-        }
-
-        stage('Build Backend') {
-            steps {
-                dir(BACKEND_DIR) {
-                    script {
-                        sh "docker build --no-cache -t ${DOCKER_REPO}:backend-latest -f Dockerfile ."
-                    }
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        sh "docker push ${DOCKER_REPO}:frontend-latest"
-                        sh "docker push ${DOCKER_REPO}:backend-latest"
-                    }
-                }
-            }
-        }
-
-        stage('Test kubectl') {
-            steps {
-                script {
-                    sh 'microk8s kubectl version --client'
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            microk8s kubectl apply -f ${K8S_DIR}/create-base-configmap.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/database-pv.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/database-service.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/database-statefulset.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/backend-deployment.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/backend-service.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/frontend-deployment.yaml
-                            microk8s kubectl apply -f ${K8S_DIR}/frontend-service.yaml
-                        """
-                    }
-                }
-            }
-        }
-
-        // Forçar atualização dos deployments para garantir o uso da imagem mais recente
-        stage('Force Update Deployments') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            microk8s kubectl rollout restart deployment/backend-deployment
-                            microk8s kubectl rollout restart deployment/frontend-deployment
-                        """
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Cleaning up workspace...'
-            cleanWs()
-        }
-    }
-}
+    </script>
+</body>
+</html>
