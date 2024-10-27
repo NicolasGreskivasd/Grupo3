@@ -7,6 +7,11 @@ spec:
   selector:
     matchLabels:
       app: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 3  # permite que até 3 pods fiquem indisponíveis durante a atualização
+      maxSurge: 1        # permite que 1 pod adicional seja criado durante a atualização
   template:
     metadata:
       labels:
@@ -16,11 +21,11 @@ spec:
       - name: backend
         image: nicolasgreskiv/pucpr-gh-pages:backend-latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
         env:
-        - name: DATABASE_URL
-          value: jdbc:mysql://database:3306/projdevsecops
-        - name: DATABASE_USER
-          value: user
-        - name: DATABASE_PASSWORD
-          value: senha
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://<database-service-name>:<database-port>/<database-name>"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "<username>"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "<password>"
