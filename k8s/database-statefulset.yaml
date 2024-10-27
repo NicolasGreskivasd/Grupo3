@@ -4,7 +4,7 @@ metadata:
   name: database
 spec:
   serviceName: "database-service"
-  replicas: 1  # Aqui deve ser apenas 1
+  replicas: 1
   selector:
     matchLabels:
       app: database
@@ -34,7 +34,8 @@ spec:
   - metadata:
       name: database-storage
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: 
+        - ReadWriteOnce
       resources:
         requests:
-          storage: 10Gi
+          storage: 1Gi  # Capacidade ajustada para 1 GiB
