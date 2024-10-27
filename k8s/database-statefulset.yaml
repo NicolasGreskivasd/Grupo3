@@ -30,7 +30,11 @@ spec:
         volumeMounts:
         - name: database-storage
           mountPath: /var/lib/mysql
-  volumes:  # Adicionando a seção de volumes
-  - name: database-storage
-    persistentVolumeClaim:
-      claimName: database-pvc  # Referenciando o PVC que você deseja usar
+  volumeClaimTemplates:
+  - metadata:
+      name: database-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi  # Tamanho reduzido para 1GB
