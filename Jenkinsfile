@@ -1,58 +1,53 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_REPO = 'nicolasgreskiv/pucpr-gh-pages' // Repositório Docker no Docker Hub
-        KUBECONFIG_CRED = 'kubeconfig' // Nome da credencial kubeconfig para Kubernetes no Jenkins
-        DOCKER_CRED = 'docker-hub-credentials' // Nome da credencial do Docker Hub no Jenkins
-    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build Frontend') {
             steps {
-                script {
-                    // Build da aplicação frontend
-                    sh 'docker build -t ${DOCKER_REPO}:frontend-latest -f projeto-web/Dockerfile projeto-web'
+                dir('projeto-web') {
+                    script {
+                        sh 'docker build -t nicolasgreskiv/pucpr-gh-pages:frontend-latest -f Dockerfile .'
+                    }
                 }
             }
         }
+
         stage('Build Backend') {
             steps {
-                script {
-                    // Build da imagem Docker para o backend
-                    sh 'docker build -t ${DOCKER_REPO}:backend-latest -f projeto-spring/Dockerfile projeto-spring'
+                dir('projeto-spring') {
+                    script {
+                        sh 'docker build -t nicolasgreskiv/pucpr-gh-pages:backend-latest -f Dockerfile .'
+                    }
                 }
             }
         }
+
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Login e push para o Docker Hub com segurança
-                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        sh '''#!/bin/bash
-                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push ${DOCKER_REPO}:frontend-latest
-                            docker push ${DOCKER_REPO}:backend-latest
-                        '''
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
+                        sh 'docker push nicolasgreskiv/pucpr-gh-pages:frontend-latest'
+                        sh 'docker push nicolasgreskiv/pucpr-gh-pages:backend-latest'
                     }
                 }
             }
         }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
-                        sh 'kubectl apply -f k8s/deployment.yaml'
-                        sh 'kubectl apply -f k8s/service.yaml'
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh 'kubectl apply -f k8s/deployment.yaml'  // Ajuste o caminho se necessário
+                        sh 'kubectl apply -f k8s/service.yaml'     // Ajuste o caminho se necessário
                     }
                 }
             }
-        }
-    }
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed.'
         }
     }
 }
