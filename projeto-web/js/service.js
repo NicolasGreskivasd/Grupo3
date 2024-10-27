@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.191.133:30001/api'; // URL base para o backend
+const API_URL = 'http://192.168.191.133:30000/api'; // URL base para o backend
 
 // Função genérica para fazer chamadas GET
 async function getData(endpoint) {
