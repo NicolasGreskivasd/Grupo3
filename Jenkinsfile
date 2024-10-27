@@ -8,6 +8,27 @@ pipeline {
             }
         }
 
+        stage('Tag Existing Images') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        
+                        // Tag frontend e backend existentes com a data e hora atual
+                        def timestamp = new Date().format("yyyyMMdd-HHmmss")
+                        sh "docker pull nicolasgreskiv/pucpr-gh-pages:frontend-latest"
+                        sh "docker pull nicolasgreskiv/pucpr-gh-pages:backend-latest"
+                        sh "docker tag nicolasgreskiv/pucpr-gh-pages:frontend-latest nicolasgreskiv/pucpr-gh-pages:frontend-${timestamp}"
+                        sh "docker tag nicolasgreskiv/pucpr-gh-pages:backend-latest nicolasgreskiv/pucpr-gh-pages:backend-${timestamp}"
+                        
+                        // Push das imagens com a tag de backup
+                        sh "docker push nicolasgreskiv/pucpr-gh-pages:frontend-${timestamp}"
+                        sh "docker push nicolasgreskiv/pucpr-gh-pages:backend-${timestamp}"
+                    }
+                }
+            }
+        }
+
         stage('Build Frontend') {
             steps {
                 dir('projeto-web') {
@@ -28,22 +49,15 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push New Images to Docker Hub') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        // Push das novas imagens "latest"
                         sh "docker push nicolasgreskiv/pucpr-gh-pages:frontend-latest"
                         sh "docker push nicolasgreskiv/pucpr-gh-pages:backend-latest"
                     }
-                }
-            }
-        }
-
-        stage('Test kubectl') {
-            steps {
-                script {
-                    sh 'microk8s kubectl version --client'
                 }
             }
         }
@@ -52,17 +66,11 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        // Aplicar ConfigMap para o script de criação do banco de dados
+                        // Aplicar configurações do Kubernetes
                         sh "microk8s kubectl apply -f k8s/create-base-configmap.yaml"
-                        
-                        // Aplicar Persistent Volume e Persistent Volume Claim antes do StatefulSet
                         sh "microk8s kubectl apply -f k8s/database-pv.yaml"
-                        
-                        // Aplicar o StatefulSet do banco de dados e o serviço
                         sh "microk8s kubectl apply -f k8s/database-service.yaml"
                         sh "microk8s kubectl apply -f k8s/database-statefulset.yaml"
-                        
-                        // Aplicar os deployments para o backend e frontend
                         sh "microk8s kubectl apply -f k8s/backend-deployment.yaml"
                         sh "microk8s kubectl apply -f k8s/backend-service.yaml"
                         sh "microk8s kubectl apply -f k8s/frontend-deployment.yaml"
