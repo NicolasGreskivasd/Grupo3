@@ -5,7 +5,8 @@ pipeline {
         stage('Test kubectl') {
             steps {
                 script {
-                    sh 'kubectl version --client'
+                    // Usando microk8s kubectl
+                    sh 'microk8s kubectl version --client'
                 }
             }
         }
