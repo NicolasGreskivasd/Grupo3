@@ -55,13 +55,15 @@ pipeline {
                         // Aplicar ConfigMap para o script de criação do banco de dados
                         sh "microk8s kubectl apply -f k8s/create-base-configmap.yaml"
                         
-                        // Aplicar Persistent Volume e Persistent Volume Claim antes dos deployments
+                        // Aplicar Persistent Volume e Persistent Volume Claim antes do StatefulSet
                         sh "microk8s kubectl apply -f k8s/database-pv.yaml"
                         sh "microk8s kubectl apply -f k8s/database-pvc.yaml"
                         
-                        // Aplicar os deployments
-                        sh "microk8s kubectl apply -f k8s/database-deployment.yaml"
+                        // Aplicar o StatefulSet do banco de dados e o serviço
+                        sh "microk8s kubectl apply -f k8s/database-statefulset.yaml"  // Atualizado para usar StatefulSet
                         sh "microk8s kubectl apply -f k8s/database-service.yaml"
+                        
+                        // Aplicar os deployments para o backend e frontend
                         sh "microk8s kubectl apply -f k8s/backend-deployment.yaml"
                         sh "microk8s kubectl apply -f k8s/backend-service.yaml"
                         sh "microk8s kubectl apply -f k8s/frontend-deployment.yaml"
