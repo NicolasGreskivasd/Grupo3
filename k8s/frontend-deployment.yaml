@@ -20,5 +20,6 @@ spec:
       containers:
       - name: frontend
         image: nicolasgreskiv/pucpr-gh-pages:frontend-latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
