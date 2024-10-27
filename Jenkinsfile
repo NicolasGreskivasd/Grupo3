@@ -21,18 +21,18 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                         
-                        // Renomear imagens existentes para backup e remover antigos backups
+                        // Renomear qualquer imagem atual para 'backup1' e remover backups antigos se necessário
                         sh """
                             docker pull ${DOCKER_REPO}:frontend-latest || true
-                            docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup || true
+                            docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup1 || true
                             docker rmi ${DOCKER_REPO}:frontend-latest || true
-
+                            
                             docker pull ${DOCKER_REPO}:backend-latest || true
-                            docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup || true
+                            docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup1 || true
                             docker rmi ${DOCKER_REPO}:backend-latest || true
 
-                            # Remover backups antigos, mantendo apenas os três mais recentes
-                            docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | sort -r | tail -n +4 | xargs -r docker rmi || true
+                            # Limpar backups antigos além de 'backup1'
+                            docker images ${DOCKER_REPO} --format "{{.Repository}}:{{.Tag}}" | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
                         """
                     }
                 }
