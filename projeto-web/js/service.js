@@ -1,4 +1,4 @@
-const API_URL = 'backend-service:30001'; // URL base para o backend
+const API_URL = 'http://192.168.239.129/:30001'; // URL base para o backend
 
 // Função genérica para fazer chamadas GET
 async function getData(endpoint) {
