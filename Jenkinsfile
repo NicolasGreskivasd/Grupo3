@@ -6,7 +6,7 @@ pipeline {
         FRONTEND_DIR = 'projeto-web'
         BACKEND_DIR = 'projeto-spring'
         K8S_DIR = 'k8s'
-        SONARQUBE_SERVER = 'SonarQube Server'  // Nome configurado no Jenkins para o servidor SonarQube
+        SONARQUBE_SERVER = 'SonarQubeScanner'  // Nome configurado no Jenkins para o servidor SonarQube
         SONARQUBE_PROJECT_KEY = 'Grupo3' // Chave do projeto no SonarQube
     }
 
