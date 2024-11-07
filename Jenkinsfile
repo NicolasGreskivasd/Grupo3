@@ -15,6 +15,16 @@ pipeline {
             }
         }
 
+        stage('Test SonarQube Scanner') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarQubeScanner'
+                    // Testa se o scanner está acessível
+                    sh "${scannerHome}/bin/sonar-scanner --version"
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 script {
