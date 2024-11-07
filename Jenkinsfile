@@ -6,15 +6,23 @@ pipeline {
         FRONTEND_DIR = 'projeto-web'
         BACKEND_DIR = 'projeto-spring'
         K8S_DIR = 'k8s'
-        SONARQUBE_SERVER = 'SonarQubeScanner'  // Nome configurado no Jenkins para o servidor SonarQube
-        SONARQUBE_PROJECT_KEY = 'Grupo3' // Atualize para o projeto correto
-        SONARQUBE_LOGIN = 'sqa_d7016240742765f2a8ee37684c6bd531e9251519' // Token SonarQube
+        SONARQUBE_SERVER = 'SonarQubeScanner'
+        SONARQUBE_PROJECT_KEY = 'Grupo3'
+        SONARQUBE_LOGIN = 'sqa_d7016240742765f2a8ee37684c6bd531e9251519'
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Build Java Project') {
+            steps {
+                dir(BACKEND_DIR) {
+                    sh 'mvn clean compile' // Compila o projeto Java
+                }
             }
         }
 
@@ -26,6 +34,7 @@ pipeline {
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} \
                         -Dsonar.sources=. \
+                        -Dsonar.java.binaries=${BACKEND_DIR}/target/classes \
                         -Dsonar.login=${SONARQUBE_LOGIN}
                         """
                     }
