@@ -18,13 +18,13 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool 'SonarQubeScanner'
-                    withSonarQubeEnv('SonarQubeScanner') {  // Nome atualizado
+                    def scannerHome = tool 'SonarQubeScanner' // Nome configurado para o scanner SonarQube
+                    withSonarQubeEnv('SonarQubeScanner') {  // Nome do servidor SonarQube
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=Grupo3 \
                             -Dsonar.sources=. \
-                            -Dsonar.login=${env.SONAR_AUTH_TOKEN}
+                            -Dsonar.login=${env.SONAR_AUTH_TOKEN}  // Variável de ambiente para o token
                         """
                     }
                 }
