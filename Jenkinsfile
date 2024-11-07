@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarQube Scanner'
-                    withSonarQubeEnv('SonarQube Server') {  // Nome configurado para o servidor SonarQube
+                    withSonarQubeEnv('SonarQube Server') {
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=Grupo3 \
@@ -27,6 +27,14 @@ pipeline {
                             -Dsonar.login=${env.SONAR_AUTH_TOKEN}
                         """
                     }
+                }
+            }
+            post {
+                success {
+                    echo 'SonarQube analysis completed successfully.'
+                }
+                failure {
+                    error 'SonarQube analysis failed, stopping the build.'
                 }
             }
         }
