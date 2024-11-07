@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "maven" # Para dependências Java
+    directory: "/" # Diretório onde o `pom.xml` está localizado
+    schedule:
+      interval: "weekly" # Frequência de atualização
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm" # Para dependências JavaScript
+    directory: "/" # Diretório onde o `package.json` está localizado
+    schedule:
+      interval: "weekly" # Frequência de atualização
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "docker" # Para o Dockerfile
+    directory: "/" # Diretório onde o Dockerfile está localizado
+    schedule:
+      interval: "weekly" # Frequência de atualização
+    open-pull-requests-limit: 5
