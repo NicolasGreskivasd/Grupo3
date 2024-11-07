@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarQube Scanner'
-                    withSonarQubeEnv('SonarQube Server') {
+                    withSonarQubeEnv('SonarQubeScanner') {  // Nome atualizado
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=Grupo3 \
