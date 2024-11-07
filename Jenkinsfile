@@ -15,28 +15,17 @@ pipeline {
             }
         }
 
-        stage('Prepare Docker Hub Backup') {
+        stage('SonarQube Analysis') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-
-                        // Renomear imagens atuais como backup, excluindo backups antigos se necessário
-                        sh """
-                            echo "Preparando backup das imagens Docker Hub..."
-
-                            docker pull ${DOCKER_REPO}:frontend-latest || true
-                            docker tag ${DOCKER_REPO}:frontend-latest ${DOCKER_REPO}:frontend-backup || true
-
-                            docker pull ${DOCKER_REPO}:backend-latest || true
-                            docker tag ${DOCKER_REPO}:backend-latest ${DOCKER_REPO}:backend-backup || true
-
-                            docker images ${DOCKER_REPO} --format '{{.Repository}}:{{.Tag}}' | grep 'backup' | tail -n +2 | xargs -r docker rmi || true
-                        """
+                    def scannerHome = tool 'SonarQube Scanner'
+                    withSonarQubeEnv('SonarQube Server') {
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Grupo3 -Dsonar.sources=."
                     }
                 }
             }
         }
+
 
         stage('Build Frontend') {
             steps {
@@ -95,21 +84,6 @@ pipeline {
                 }
             }
         }
-
-        // Forçar atualização dos deployments para garantir o uso da imagem mais recente
-        stage('Force Update Deployments') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            microk8s kubectl rollout restart deployment/backend-deployment
-                            microk8s kubectl rollout restart deployment/frontend-deployment
-                        """
-                    }
-                }
-            }
-        }
-    }
 
     post {
         always {
