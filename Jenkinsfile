@@ -7,8 +7,8 @@ pipeline {
         BACKEND_DIR = 'projeto-spring'
         K8S_DIR = 'k8s'
         SONARQUBE_SERVER = 'SonarQubeScanner'  // Nome configurado no Jenkins para o servidor SonarQube
-        SONARQUBE_PROJECT_KEY = 'Grupo3' // Chave do projeto no SonarQube
-        SONAR_SCANNER_PATH = '/opt/sonar-scanner/bin/sonar-scanner'  // Caminho do Sonar Scanner
+        SONARQUBE_PROJECT_KEY = 'Grupo3' // Atualize para o projeto correto
+        SONARQUBE_LOGIN = 'sqa_d7016240742765f2a8ee37684c6bd531e9251519' // Token SonarQube
     }
 
     stages {
@@ -22,7 +22,13 @@ pipeline {
             steps {
                 script {
                     withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                        sh "${SONAR_SCANNER_PATH} -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} -Dsonar.sources=. -Dsonar.login=${env.SONAR_AUTH_TOKEN}"
+                        sh """
+                        /opt/sonar-scanner/bin/sonar-scanner \
+                        -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} \
+                        -Dsonar.sources=. \
+                        -Dsonar.java.binaries=${BACKEND_DIR}/target \
+                        -Dsonar.login=${SONARQUBE_LOGIN}
+                        """
                     }
                 }
             }
