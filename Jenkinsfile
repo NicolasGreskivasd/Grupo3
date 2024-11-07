@@ -26,7 +26,6 @@ pipeline {
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} \
                         -Dsonar.sources=. \
-                        -Dsonar.java.binaries=${BACKEND_DIR}/target \
                         -Dsonar.login=${SONARQUBE_LOGIN}
                         """
                     }
