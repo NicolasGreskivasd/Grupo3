@@ -6,6 +6,8 @@ pipeline {
         FRONTEND_DIR = 'projeto-web'
         BACKEND_DIR = 'projeto-spring'
         K8S_DIR = 'k8s'
+        SONARQUBE_SERVER = 'SonarQube Server'  // Nome configurado no Jenkins para o servidor SonarQube
+        SONARQUBE_PROJECT_KEY = 'Grupo3' // Chave do projeto no SonarQube
     }
 
     stages {
@@ -15,7 +17,23 @@ pipeline {
             }
         }
 
-    
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                        sh "sonar-scanner -Dsonar.projectKey=${SONARQUBE_PROJECT_KEY} -Dsonar.sources=. -Dsonar.login=${env.SONAR_AUTH_TOKEN}"
+                    }
+                }
+            }
+            post {
+                success {
+                    echo 'SonarQube analysis completed successfully.'
+                }
+                failure {
+                    error 'SonarQube analysis failed, stopping the build.'
+                }
+            }
+        }
 
         stage('Build Frontend') {
             steps {
