@@ -19,13 +19,12 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarQube Scanner'
-                    withSonarQubeEnv('SonarQube Server') {
+                    withSonarQubeEnv('SonarQube Server') {  // Nome configurado para o servidor SonarQube
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=Grupo3 \
                             -Dsonar.sources=. \
-                            -Dsonar.login=$SONAR_USER \
-                            -Dsonar.password=$SONAR_PASS
+                            -Dsonar.login=${env.SONAR_AUTH_TOKEN}
                         """
                     }
                 }
@@ -54,12 +53,6 @@ pipeline {
                     sh "docker push ${DOCKER_REPO}:frontend-latest"
                     sh "docker push ${DOCKER_REPO}:backend-latest"
                 }
-            }
-        }
-
-        stage('Test kubectl') {
-            steps {
-                sh 'microk8s kubectl version --client'
             }
         }
 
