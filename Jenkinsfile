@@ -26,7 +26,6 @@ pipeline {
             }
         }
 
-
         stage('Build Frontend') {
             steps {
                 dir(FRONTEND_DIR) {
@@ -84,6 +83,7 @@ pipeline {
                 }
             }
         }
+    }
 
     post {
         always {
