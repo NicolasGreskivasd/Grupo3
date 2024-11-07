@@ -19,8 +19,17 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarQube Scanner'
-                    withSonarQubeEnv('SonarQube Server') {
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Grupo3 -Dsonar.sources=."
+                    
+                    withCredentials([usernamePassword(credentialsId: 'sonarqube2', passwordVariable: 'SONAR_PASS', usernameVariable: 'SONAR_USER')]) {
+                        withSonarQubeEnv('SonarQube Scan') {  // Use o nome configurado para o SonarQube no Jenkins
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=Grupo3 \
+                                -Dsonar.sources=. \
+                                -Dsonar.login=$SONAR_USER \
+                                -Dsonar.password=$SONAR_PASS
+                            """
+                        }
                     }
                 }
             }
