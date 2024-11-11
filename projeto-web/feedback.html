@@ -7,43 +7,48 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Gerenciamento de Feedbacks</h1>
-    </div>
     <div class="container">
-        <h2 id="formTitle">Adicionar Feedback</h2>
-        <input type="hidden" id="idFeedback">
-        <div class="form-group">
-            <label for="idUsuario">ID Usuário:</label>
-            <input type="number" id="idUsuario">
+        <header class="header">
+            <img src="/img/logo.jpeg" alt="Logo" class="logo"> 
+            <h1>Gerenciamento de Feedbacks</h1>
+        </header>
+        <div class="form-container">
+            <h2 id="formTitle">Adicionar Feedback</h2>
+            <input type="hidden" id="idFeedback">
+            <div class="form-group">
+                <label for="idUsuario">ID Usuário:</label>
+                <input type="number" id="idUsuario">
+            </div>
+            <div class="form-group">
+                <label for="comentario">Comentário:</label>
+                <textarea id="comentario" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; box-sizing: border-box;"></textarea>
+            </div>
+            <button class="button" id="saveButton" onclick="salvarFeedback()">Adicionar</button>
         </div>
-        <div class="form-group">
-            <label for="comentario">Comentário:</label>
-            <textarea id="comentario"></textarea>
-        </div>
-        <button class="button" id="saveButton" onclick="salvarFeedback()">Adicionar</button>
 
         <h2>Lista de Feedbacks</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID Feedback</th>
-                    <th>ID Usuário</th>
-                    <th>Comentário</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="feedbacksTable">
-                <!-- Feedbacks serão carregados aqui -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID Feedback</th>
+                        <th>ID Usuário</th>
+                        <th>Comentário</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="feedbacksTable">
+                   
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="js/service.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", carregarFeedbacks);
 
-        // Carregar feedbacks
+       
         async function carregarFeedbacks() {
             const feedbacks = await getData('feedback');
             const tabela = document.getElementById('feedbacksTable');
@@ -56,8 +61,8 @@
                         <td>${feedback.idUsuario}</td>
                         <td>${feedback.comentario}</td>
                         <td>
-                            <button onclick="editarFeedback(${feedback.idFeedback})">Editar</button>
-                            <button onclick="excluirFeedback(${feedback.idFeedback})">Excluir</button>
+                            <button class="button" style="background-color: #FFC107;" onclick="editarFeedback(${feedback.idFeedback})">Editar</button>
+                            <button class="button" style="background-color: #F44336;" onclick="excluirFeedback(${feedback.idFeedback})">Excluir</button>
                         </td>
                     </tr>
                 `;
@@ -65,7 +70,7 @@
             });
         }
 
-        // Adicionar ou editar feedback
+      
         async function salvarFeedback() {
             const idFeedback = document.getElementById('idFeedback').value;
             const idUsuario = document.getElementById('idUsuario').value;
@@ -83,7 +88,7 @@
             carregarFeedbacks();
         }
 
-        // Carregar feedback para edição
+      
         async function editarFeedback(idFeedback) {
             const feedback = await getData(`feedback/${idFeedback}`);
 
@@ -95,7 +100,7 @@
             document.getElementById('saveButton').textContent = 'Salvar Alterações';
         }
 
-        // Excluir feedback
+        
         async function excluirFeedback(idFeedback) {
             if (confirm('Tem certeza que deseja excluir este feedback?')) {
                 await deleteData(`feedback/${idFeedback}`);
@@ -103,7 +108,7 @@
             }
         }
 
-        // Limpar o formulário
+        
         function limparFormulario() {
             document.getElementById('idFeedback').value = '';
             document.getElementById('idUsuario').value = '';

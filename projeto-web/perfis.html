@@ -7,43 +7,49 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Gerenciamento de Perfis</h1>
-    </div>
     <div class="container">
-        <h2 id="formTitle">Adicionar Perfil</h2>
-        <input type="hidden" id="idPerfil">
-        <div class="form-group">
-            <label for="idUsuario">ID Usuário:</label>
-            <input type="number" id="idUsuario">
+        <header class="header">
+            <img src="/img/logo.jpeg" alt="Logo" class="logo"> 
+            <h1>Gerenciamento de Perfis</h1>
+        </header>
+        
+        <div class="form-container">
+            <h2 id="formTitle">Adicionar Perfil</h2>
+            <input type="hidden" id="idPerfil">
+            <div class="form-group">
+                <label for="idUsuario">ID Usuário:</label>
+                <input type="number" id="idUsuario">
+            </div>
+            <div class="form-group">
+                <label for="descricao">Descrição do Perfil:</label>
+                <input type="text" id="descricao">
+            </div>
+            <button class="button" id="saveButton" onclick="salvarPerfil()">Adicionar</button>
         </div>
-        <div class="form-group">
-            <label for="descricao">Descrição do Perfil:</label>
-            <input type="text" id="descricao">
-        </div>
-        <button class="button" id="saveButton" onclick="salvarPerfil()">Adicionar</button>
 
         <h2>Lista de Perfis</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID Perfil</th>
-                    <th>ID Usuário</th>
-                    <th>Descrição</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="perfisTable">
-                <!-- Perfis serão carregados aqui -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID Perfil</th>
+                        <th>ID Usuário</th>
+                        <th>Descrição</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="perfisTable">
+                    
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="js/service.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", carregarPerfis);
 
-        // Carregar perfis
+        
         async function carregarPerfis() {
             const perfis = await getData('perfis');
             const tabela = document.getElementById('perfisTable');
@@ -65,7 +71,7 @@
             });
         }
 
-        // Adicionar ou editar perfil
+     
         async function salvarPerfil() {
             const idPerfil = document.getElementById('idPerfil').value;
             const idUsuario = document.getElementById('idUsuario').value;
@@ -95,7 +101,7 @@
             document.getElementById('saveButton').textContent = 'Salvar Alterações';
         }
 
-        // Excluir perfil
+        
         async function excluirPerfil(idPerfil) {
             if (confirm('Tem certeza que deseja excluir este perfil?')) {
                 await deleteData(`perfis/${idPerfil}`);
@@ -103,7 +109,7 @@
             }
         }
 
-        // Limpar o formulário
+        
         function limparFormulario() {
             document.getElementById('idPerfil').value = '';
             document.getElementById('idUsuario').value = '';

@@ -7,34 +7,43 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>Postagens</h1>
-    
-    <form id="novaPostagemForm" onsubmit="adicionarPostagem(event)">
-        <div class="form-group">
-            <label for="titulo">Título:</label>
-            <input type="text" id="titulo" class="form-control" placeholder="Digite o título" required>
-        </div>
-        <div class="form-group">
-            <label for="conteudo">Conteúdo:</label>
-            <textarea id="conteudo" class="form-control" placeholder="Digite o conteúdo" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Adicionar Postagem</button>
-    </form>
+    <div class="container">
+        <header class="header">
+            <img src="/img/logo.jpeg" alt="Logo" class="logo"> 
+            <h1>Postagens</h1>
+        </header>
 
-    <h2>Lista de Postagens</h2>
-    
-    <table id="postagensTable" class="table">
-        <thead>
-            <tr>
-                <th>ID Postagem</th>
-                <th>Título</th>
-                <th>Conteúdo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- As postagens serão preenchidas aqui via JavaScript -->
-        </tbody>
-    </table>
+        <div class="form-container">
+            <h2 id="formTitle">Adicionar Postagem</h2>
+            <form id="novaPostagemForm" onsubmit="adicionarPostagem(event)">
+                <div class="form-group">
+                    <label for="titulo">Título:</label>
+                    <input type="text" id="titulo" class="form-control" placeholder="Digite o título" required>
+                </div>
+                <div class="form-group">
+                    <label for="conteudo">Conteúdo:</label>
+                    <textarea id="conteudo" class="form-control" placeholder="Digite o conteúdo" required></textarea>
+                </div>
+                <button type="submit" class="button">Adicionar Postagem</button>
+            </form>
+        </div>
+
+        <h2>Lista de Postagens</h2>
+        <div class="table-container">
+            <table id="postagensTable" class="table">
+                <thead>
+                    <tr>
+                        <th>ID Postagem</th>
+                        <th>Título</th>
+                        <th>Conteúdo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <script src="js/service.js"></script>
     <script>
@@ -66,12 +75,11 @@
 
             if (response && response.idPostagem) {
                 alert('Postagem adicionada com sucesso!');
-                carregarPostagens();  // Atualiza a lista de postagens
+                carregarPostagens();  
             } else {
                 alert('Erro ao adicionar postagem.');
             }
 
-            // Limpar o formulário após o envio
             document.getElementById('novaPostagemForm').reset();
         }
 

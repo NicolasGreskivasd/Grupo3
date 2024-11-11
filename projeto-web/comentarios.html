@@ -7,48 +7,52 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Gerenciamento de Comentários</h1>
-    </div>
     <div class="container">
-        <h2 id="formTitle">Adicionar Comentário</h2>
-        <input type="hidden" id="idComentario">
-        <div class="form-group">
-            <label for="idUsuario">ID Usuário:</label>
-            <input type="number" id="idUsuario">
+        <header class="header">
+            <img src="/img/logo.jpeg" alt="Logo" class="logo"> 
+            <h1>Gerenciamento de Comentários</h1>
+        </header>
+        <div class="form-container">
+            <h2 id="formTitle">Adicionar Comentário</h2>
+            <input type="hidden" id="idComentario">
+            <div class="form-group">
+                <label for="idUsuario">ID Usuário:</label>
+                <input type="number" id="idUsuario">
+            </div>
+            <div class="form-group">
+                <label for="idPostagem">ID Postagem:</label>
+                <input type="number" id="idPostagem">
+            </div>
+            <div class="form-group">
+                <label for="comentario">Comentário:</label>
+                <textarea id="comentario" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; box-sizing: border-box;"></textarea>
+            </div>
+            <button class="button" id="saveButton" onclick="salvarComentario()">Adicionar</button>
         </div>
-        <div class="form-group">
-            <label for="idPostagem">ID Postagem:</label>
-            <input type="number" id="idPostagem">
-        </div>
-        <div class="form-group">
-            <label for="comentario">Comentário:</label>
-            <textarea id="comentario"></textarea>
-        </div>
-        <button class="button" id="saveButton" onclick="salvarComentario()">Adicionar</button>
 
         <h2>Lista de Comentários</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Comentário</th>
-                    <th>ID Usuário</th>
-                    <th>ID Postagem</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="comentariosTable">
-                <!-- Comentários serão carregados aqui -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Comentário</th>
+                        <th>ID Usuário</th>
+                        <th>ID Postagem</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="comentariosTable">
+                   
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="js/service.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", carregarComentarios);
 
-        // Carregar comentários
         async function carregarComentarios() {
             const comentarios = await getData('comentarios');
             const tabela = document.getElementById('comentariosTable');
@@ -62,8 +66,8 @@
                         <td>${comentario.idUsuario}</td>
                         <td>${comentario.idPostagem}</td>
                         <td>
-                            <button onclick="editarComentario(${comentario.idComentario})">Editar</button>
-                            <button onclick="excluirComentario(${comentario.idComentario})">Excluir</button>
+                            <button class="button" style="background-color: #FFC107;" onclick="editarComentario(${comentario.idComentario})">Editar</button>
+                            <button class="button" style="background-color: #F44336;" onclick="excluirComentario(${comentario.idComentario})">Excluir</button>
                         </td>
                     </tr>
                 `;
@@ -71,7 +75,6 @@
             });
         }
 
-        // Adicionar ou editar comentário
         async function salvarComentario() {
             const idComentario = document.getElementById('idComentario').value;
             const idUsuario = document.getElementById('idUsuario').value;
@@ -90,7 +93,6 @@
             carregarComentarios();
         }
 
-        // Carregar comentário para edição
         async function editarComentario(idComentario) {
             const comentario = await getData(`comentarios/${idComentario}`);
 
@@ -103,7 +105,6 @@
             document.getElementById('saveButton').textContent = 'Salvar Alterações';
         }
 
-        // Excluir comentário
         async function excluirComentario(idComentario) {
             if (confirm('Tem certeza que deseja excluir este comentário?')) {
                 await deleteData(`comentarios/${idComentario}`);
@@ -111,7 +112,6 @@
             }
         }
 
-        // Limpar o formulário
         function limparFormulario() {
             document.getElementById('idComentario').value = '';
             document.getElementById('idUsuario').value = '';

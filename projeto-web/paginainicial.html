@@ -5,19 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página Inicial</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Ajustes para centralizar os botões em coluna */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .button {
+            width: 80%; /* Ajusta a largura dos botões para ocupar boa parte da largura da caixa */
+            text-align: center;
+            padding: 10px 0;
+            color: white;
+            background-color: #4CAF50;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Bem-vindo ao Sistema</h1>
-    </div>
     <div class="container">
-        <h2>Escolha uma opção</h2>
-        <div class="form-group">
-            <a href="usuarios.html" class="button">Usuario</a>
-            <a href="feedback.html" class="button">FeedBack</a>
-            <a href="comentarios.html" class="button">Comentarios</a>
-            <a href="postagens.html" class="button">Postagens</a>
-            <a href="logs.html" class="button">Logs</a>
+        <header class="header">
+            <img src="/img/logo.jpeg" alt="Logo" class="logo"> <!-- Atualize o caminho da imagem, se necessário -->
+            <h1>Bem-vindo ao Sistema</h1>
+        </header>
+        
+        <div class="form-container">
+            <h2>Escolha uma opção</h2>
+            <div class="form-group">
+                <a href="usuarios.html" class="button">Usuário</a>
+                <a href="feedback.html" class="button">Feedback</a>
+                <a href="comentarios.html" class="button">Comentários</a>
+                <a href="postagens.html" class="button">Postagens</a>
+                <a href="logs.html" class="button">Logs</a>
+            </div>
         </div>
     </div>
 </body>
